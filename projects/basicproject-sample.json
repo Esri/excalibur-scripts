@@ -1,12 +1,12 @@
 {
-  "title": "basic project v2",
-  "summary": "A basic project tagged with 'version': 2",
+  "title": "A simple imagery project",
+  "summary": "A simple project with just a focus image layer",
   "description": "",
-  "status": "StatusDraft",
+  "instructions": "Look for damage",
   "focusImageLayer": {
     "serviceType": "arcgis",
     "serviceUrl": "url to image service",
-    "rasterIds": [9, 1, 7],
+    "rasterIds": [],
     "layerNames": []
   }
 }

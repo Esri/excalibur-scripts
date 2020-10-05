@@ -67,4 +67,179 @@ Contains the two Python scripts that write the project to the portal.
 
 ## Project definition schema
 
+### Imagery Project
 
+The properties for an imagery project. The `focusImageLayer` and `observationLayers` property are objects and their schema is described below.
+
+| Name   | Description  | Required  | Default |
+| ------ | -----------  | -------   | ------  |
+| title  | The main display title for the project | Yes | |
+| summary | A short summary of the project | No | There is no default so it is suggested to supply a summary |
+| description | A more detailed description of the project | No | No default |
+| instructions | Instructions for the person who is going to be working with the project | Yes | |
+| webmapId | The item id of a webmap in the portal | No | If the webmapId is not specified, the user's default basemap is used |
+| focusImageLayer | The descriptor for an imagery layer. See below for the schema | Yes | No default |
+| observationLayers | Array of descriptors for Feature Layers used to collect observations | No | No default |
+
+### Focus Image Layer
+
+The properties for the `focusImageLayer` object.
+
+| Name   | Description  | Required  | Default |
+| ------ | -----------  | -------   | ------  |
+| serviceType | The type of service used for the layer. The options are `arcgis` for an ArcGIS Image Service or `wms` for an OGC WMS Service | Yes | |
+| serviceUrl | Url to the service | Yes | |
+| rasterIds | An array of numbers. These are the ids of images in an ArcGIS Image Service. If specified, the layer will be cnfigured to show only the specified images. Only valid when serviceType is `arcgis` | No | [] |
+| layerNames | An array of strings. These are the sublayer names in a WMS Service. If specified, the layer will be cnfigured to show only the specified sublayers. Only valid when serviceType is `wms` | No | [] |
+
+### Observation Layer
+
+The properties for the objects in the `observationLayers` array.
+
+| Name   | Description  | Required  | Default |
+| ------ | -----------  | -------   | ------  |
+| type   | The type of layer. For now the only option is `Feature Layer` | Yes | |
+| itemId | The id of a Feature Layer item in the same portal where the project is stored. Either this or the `url` property must be supplied | No | |
+| url    | The url to an ArcGIS Feature Service layer. Either this or the `itemId` property must be supplied | No | |
+
+## Sample Project Configurations
+
+### Project with just a focus image layer
+
+#### ArcGIS Image Service and all images are displayed
+
+```
+{
+  "title": "A simple imagery project",
+  "summary": "A simple project with just a focus image layer",
+  "description": "",
+  "instructions": "Look for damage",
+  "focusImageLayer": {
+    "serviceType": "arcgis",
+    "serviceUrl": "https://server/service-name/ImageServer",
+    "rasterIds": [],
+    "layerNames": []
+  }
+}
+```
+
+#### ArcGIS Image Service and a subset of images are displayed
+
+```
+{
+  "title": "A simple imagery project",
+  "summary": "A simple project with just a focus image layer",
+  "description": "",
+  "instructions": "Look for damage",
+  "focusImageLayer": {
+    "serviceType": "arcgis",
+    "serviceUrl": "https://server/service-name/ImageServer",
+    "rasterIds": [1, 2, 3],
+    "layerNames": []
+  }
+}
+```
+
+#### WMS Service all layers are displayed
+
+```
+{
+  "title": "A simple imagery project",
+  "summary": "A simple project with a WMS layer",
+  "description": "",
+  "instructions": "Look for damage",
+  "focusImageLayer": {
+    "serviceType": "wms",
+    "serviceUrl": "https://server/service-name",
+    "rasterIds": [],
+    "layerNames": []
+  }
+}
+```
+
+#### WMS Service and a subset of layers are displayed
+
+```
+{
+  "title": "A simple imagery project",
+  "summary": "A simple project with a WMS layer",
+  "description": "",
+  "instructions": "Look for damage",
+  "focusImageLayer": {
+    "serviceType": "wms",
+    "serviceUrl": "https://server/service-name",
+    "rasterIds": []
+    "layerNames": ["damage0102", "damage0104"]
+  }
+}
+```
+
+### Project with observation layer(s)
+
+#### Single observation layer
+
+```
+{
+  "title": "Imagery project with observations",
+  "summary": "A project with an observation layer",
+  "description": "",
+  "instructions": "Add a point on top of anything of interest and enter comments",
+  "focusImageLayer": {
+    "serviceType": "arcgis",
+    "serviceUrl": "https://server/service-name/ImageServer",
+    "rasterIds": [1, 2, 3],
+    "layerNames": []
+  },
+  "observationLayers": [
+    {
+      "type": "Feature Layer",
+      "itemId": "123456789abcdefg"
+    }
+}
+```
+
+#### Multiple observation layers (one by url, one by item id)
+
+This also shows the `webmapId` property
+
+```
+{
+  "title": "Imagery project with observations",
+  "summary": "A project with an observation layer",
+  "description": "",
+  "instructions": "Add a point on top of anything of interest and enter comments",
+  "focusImageLayer": {
+    "serviceType": "arcgis",
+    "serviceUrl": "https://server/service-name/ImageServer",
+    "rasterIds": [1, 2, 3],
+    "layerNames": []
+  },
+  "observationLayers": [
+    {
+      "type": "Feature Layer",
+      "itemId": "123456789abcdefg"
+    },
+    {
+      "type": "Feature Layer",
+      "url": "url to Feature Service"
+    }
+  ],
+  "webmapId": "12345678"
+}
+```
+
+## Resources
+
+TODO - What resources?
+
+## Issues
+
+Find a bug or want to request a new feature? Please let us know by submitting an issue.
+
+## Contributing
+
+Esri welcomes contributions from anyone and everyone. Please see our [guidelines for contributing](https://github.com/esri/contributing).
+
+## License
+
+TODO - What license?

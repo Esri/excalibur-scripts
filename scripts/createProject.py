@@ -108,7 +108,7 @@ class ProjectCreator:
         if "summary" in projectConfig:
             itemObject["snippet"] = projectConfig["summary"]
         else:
-            itemObject["snippet"] = "An excalibur image project"
+            itemObject["snippet"] = ""
 
         self._itemObject = itemObject
         self._projectObject = projectObject
