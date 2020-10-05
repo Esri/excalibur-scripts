@@ -1,0 +1,15 @@
+# log files
+logs/*.log
+logs/*.log.*
+
+# python script cache
+scripts/__pycache__
+
+# non-sample project json
+projects/*.json
+!projects/*-sample.json
+
+
+# non-sample paths json
+config/*.json
+!config/*-sample.json

@@ -1,0 +1,23 @@
+{
+  "title": "Simple Observations of neighborhood",
+  "summary": "Daily observations of neighborhood in San Francisco",
+  "description": "",
+  "status": "StatusOpen",
+  "instructions": "Add a point on top of anything of interest and enter comments",
+  "focusImageLayer": {
+    "serviceType": "arcgis",
+    "serviceUrl": "url to image service",
+    "rasterIds": [9, 1, 7],
+    "layerNames": []
+  },
+  "observationLayers": [
+    {
+      "itemId": "item id of feature service",
+      "type": "Feature Layer"
+    },
+    {
+      "type": "Feature Layer",
+      "url": "url to Feature Service"
+    }
+  ]
+}
