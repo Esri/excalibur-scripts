@@ -1,14 +1,21 @@
-# Scripted Excalibur Imagery Project Creation
+# excalibur-scripts
 
-## Description
-This repository contains Python scripts and sample configuration files that can be used to create Excalibur Imagery Projects outside of the Excalibur application.
+Here are Python scripts and sample configuration files that can be used to automate the creation of Excalibur Imagery Projects.
 
-To get the scripts and configuration files clone this repository or download it as a zip file and extract the contents to your machine.
+## Included
 
-Included:
 * Sample JSON files that define an Imagery Project
 * Sample JSON files that define overall configuration definitions for running the scripts
 * Python scripts that create an Imagery Project in a portal
+
+## Instructions
+
+1. Fork and then clone this repository to your machine. Or download it as a zip file and extract the contents to your machine.
+2. Make sure you have all the [requirements](#requirements).
+3. Copy and edit the configuration files.
+4. Run the script to create the project.
+
+Detailed instructions are in the [Creating a project](#creating-a-project) section.
 
 ## Requirements
 
@@ -230,16 +237,30 @@ This also shows the `webmapId` property
 
 ## Resources
 
-TODO - What resources?
+* Getting started with [Excalibur](https://enterprise.arcgis.com/en/excalibur/latest/get-started/what-is-arcgis-excalibur.htm)
+* Overview of [Excalibur Imagery Projects](https://enterprise.arcgis.com/en/excalibur/latest/get-started/what-is-an-imagery-project-.htm)
 
 ## Issues
 
-Find a bug or want to request a new feature? Please let us know by submitting an issue.
+Find a bug or want to request a new feature?  Please let us know by submitting an issue.
 
 ## Contributing
 
 Esri welcomes contributions from anyone and everyone. Please see our [guidelines for contributing](https://github.com/esri/contributing).
 
-## License
+## Licensing
+Copyright 2020 Esri
 
-TODO - What license?
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+A copy of the license is available in the repository's [License.txt]( https://github.com/Esri/excalibur-scripts/blob/master/License.txt) file.
