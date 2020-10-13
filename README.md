@@ -2,6 +2,8 @@
 
 Here are Python scripts and sample configuration files that can be used to automate the creation of Excalibur Imagery Projects.
 
+For more information about Excalibur and Imagery Projects see the [Resources section](#resources).
+
 ## Included
 
 * Sample JSON files that define an Imagery Project
@@ -21,9 +23,9 @@ Detailed instructions are in the [Creating a project](#creating-a-project) secti
 
 ### Python 3
 
-The scripts require Python 3 to be installed on your machine. The scripts were developed using Python version 3.8.6. Python 3 is already installed on your machine if you are running ArcGIS Pro. To see if Python is installed, open a terminal and run the command `python`. You should see the version of Python displayed and be at a command prompt for entering Python commands.
+The scripts require Python 3 to be installed on your machine. The scripts were developed using Python version 3.8.6. Python 3 is already installed on your machine if you are running ArcGIS Pro. To see if Python is installed, open a terminal and run the command `python`. To see if Python is installed, open a terminal and run the command `python`. If installed, you will see the version of Python displayed and be at a command prompt for entering Python commands.
 
-If Python is not installed on your machine, you can download the version for your OS from the [Python download site](https://www.python.org/downloads/). It is recommended to add the path to the Python executable to the `Paths` on your machine. Once installed, open a terminal and run the command `python`. You should see the version of Python displayed and be at a command prompt for entering Python commands.
+If Python is not installed on your machine, you can download the version for your OS from the [Python download site](https://www.python.org/downloads/). It is recommended to add the path to the Python executable to the `Paths` on your machine. Once installed, open a terminal and run the command `python` and make sure it runs without errors.
 
 ### Requests library
 
@@ -96,8 +98,8 @@ The properties for the `focusImageLayer` object.
 | ------ | -----------  | -------   | ------  |
 | serviceType | The type of service used for the layer. The options are `arcgis` for an ArcGIS Image Service or `wms` for an OGC WMS Service | Yes | |
 | serviceUrl | Url to the service | Yes | |
-| rasterIds | An array of numbers. These are the ids of images in an ArcGIS Image Service. If specified, the layer will be cnfigured to show only the specified images. Only valid when serviceType is `arcgis` | No | [] |
-| layerNames | An array of strings. These are the sublayer names in a WMS Service. If specified, the layer will be cnfigured to show only the specified sublayers. Only valid when serviceType is `wms` | No | [] |
+| rasterIds | An array of numbers. These are the ids of images in an ArcGIS Image Service. If specified, the layer will be configured to show only the specified images. Only valid when serviceType is `arcgis` | No | [] |
+| layerNames | An array of strings. These are the sublayer names in a WMS Service. If specified, the layer will be configured to show only the specified sublayers. Only valid when serviceType is `wms` | No | [] |
 
 ### Observation Layer
 
