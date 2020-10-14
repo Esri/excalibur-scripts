@@ -12,11 +12,11 @@
   "observationLayers": [
     {
       "type": "Feature Layer",
-      "itemId": "item id of feature service"
+      "itemId": "portal item id of feature service"
     },
     {
       "type": "Feature Layer",
-      "url": "url to Feature Service"
+      "url": "url to Feature Service - https://server-name/webadaptor/service-name/FeatureServer/layer-id"
     }
   ],
   "webmapId": "12345678"
