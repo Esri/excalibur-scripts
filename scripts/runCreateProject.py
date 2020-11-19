@@ -1,17 +1,16 @@
-/* Copyright 2020 Esri
-*
-* Licensed under the Apache License Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+# Copyright 2020 Esri
+#
+# Licensed under the Apache License Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 """
 A script that uses the ProjectCreator class to create an Excalibur Imagery Project in a Portal.
@@ -57,6 +56,7 @@ if __name__ == "__main__":
 
     projectConfigDir = None
     sharingUrlFromPaths = None
+    verifySSL = True
 
     filePath = path.join(APP_CONFIG_DIR, "paths.json")
     with open(filePath) as pathsFile:
@@ -64,6 +64,7 @@ if __name__ == "__main__":
         pathsJson = json.loads(pathsJson)
         projectConfigDir = pathsJson["PROJECT_CONFIG_DIR"]
         sharingUrlFromPaths = pathsJson["SHARING_URL"]
+        verifySSL = pathsJson["VERIFY_SSL"]
 
     # Check if the project json file exists - add .json extension if needed
     fileName = args.configFileName
@@ -82,6 +83,7 @@ if __name__ == "__main__":
 
     print("orgshare argument: {}".format(args.orgshare))
     print("shareWithOrg variable: {}".format(shareWithOrg))
+    print("verifySSL variable: {}".format(verifySSL))
 
     projectJson = None
     questionJson = None
@@ -116,7 +118,7 @@ if __name__ == "__main__":
 
         print("Creating project!!!!")
         theCreator = ProjectCreator(
-            username, password, portalUrl, shareWithOrg)
+            username, password, portalUrl, shareWithOrg, verifySSL)
         itemId = theCreator.makeProject(projectJson)
 
         print("Project successfully created. Item ID is: {0}".format(itemId))

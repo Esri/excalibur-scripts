@@ -1,17 +1,16 @@
-/* Copyright 2020 Esri
-*
-* Licensed under the Apache License Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+# Copyright 2020 Esri
+#
+# Licensed under the Apache License Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 """ A script that creates an Excalibur Imagery Project in a Portal using a JSON configuration file
 
@@ -46,13 +45,8 @@ DEFAULT_PROJECT_VERSION = 2
 # Default type of project
 DEFAULT_PROJECT_TYPE = "BaseProject"
 
-# Flag to not verify SSL certificate when making https request.
-# Change to False to NOT verify SSL certificates.
-VERIFY_SSL = True
-
-
 class ProjectCreator:
-    def __init__(self, username, password, portalSharingUrl, shareWithOrg=False):
+    def __init__(self, username, password, portalSharingUrl, shareWithOrg=False, verifySSL=True):
         """
         Constructor for the ProjectCreator class
 
@@ -62,6 +56,7 @@ class ProjectCreator:
             portalSharingUrl (string): The url to the 'sharing' endpoint that is the base url for REST calls.
                 Format is https://<domain>/<webadaptor>/sharing/rest
             shareWithOrg (boolean): Flag to share the project item with the organization
+            verifySSL (boolean): Flag to verify SSL certificate when making https request
         """
 
         logging.config.fileConfig(LOG_CONFIG_FILE_NAME)
@@ -78,6 +73,7 @@ class ProjectCreator:
         self.username = username
         self.password = password
         self.shareWithOrg = shareWithOrg
+        self.verifySSL = verifySSL;
 
         self._contentUrl = portalSharingUrl + "/content/users/" + username
 
@@ -189,7 +185,7 @@ class ProjectCreator:
                 "referer": "clientIp", "f": "json"}
         url = self.portalSharingUrl + "/generateToken"
 
-        r = requests.post(url, data=data, verify=VERIFY_SSL)
+        r = requests.post(url, data=data, verify=self.verifySSL)
 
         if r.status_code != 200:
             message = "Error in htttp request to get token: Http status code: {0}".format(
@@ -220,7 +216,7 @@ class ProjectCreator:
         # get existing folders to see if "name" exists
         url = self._contentUrl
         data = {"f": "json", "token": self._token, "num": 1}
-        r = requests.get(url, params=data, verify=VERIFY_SSL)
+        r = requests.get(url, params=data, verify=self.verifySSL)
 
         if (r.status_code != 200):
             raise Exception("Error in htttp request to get existing folders")
@@ -243,7 +239,7 @@ class ProjectCreator:
 
         data = {"f": "json", "token": self._token, "title": name}
 
-        r = requests.post(url, data=data, verify=VERIFY_SSL)
+        r = requests.post(url, data=data, verify=self.verifySSL)
 
         if r.status_code != 200:
             raise Exception("Error in http request to create folder")
@@ -277,7 +273,7 @@ class ProjectCreator:
 
         errMsg = None
 
-        r = requests.post(url, data=item, verify=VERIFY_SSL)
+        r = requests.post(url, data=item, verify=self.verifySSL)
 
         if r.status_code != 200:
             raise Exception("Error in http request to create the portal item")
@@ -309,7 +305,7 @@ class ProjectCreator:
         url = self.portalSharingUrl + "/search"
         data = {"f": "json", "token": self._token, "q": queryString}
 
-        r = requests.get(url, params=data, verify=VERIFY_SSL)
+        r = requests.get(url, params=data, verify=self.verifySSL)
 
         if r.status_code != 200:
             message = "Error searching for project. Http code: {!s}".format(
@@ -340,7 +336,7 @@ class ProjectCreator:
         data["org"] = True
         data["items"] = items
 
-        r = requests.post(url, data=data, verify=VERIFY_SSL)
+        r = requests.post(url, data=data, verify=self.verifySSL)
 
         if r.status_code != 200:
             message = "Error sharing items. Http code: {!s}".format(

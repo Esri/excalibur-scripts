@@ -72,7 +72,7 @@ Contains the two Python scripts that write the project to the portal.
     * **-o** or **--orgshare**: `True`/`False` flag for sharing the project item with the organization. Default is `False` (do not share it).
 * If the script runs successfully, you will see a console log in the terminal that has the item id of the Excalibur Imagery Project's portal item.
 
-**NOTE: In the scripts/createProject.py script there is a constant named 'VERIFY_SSL'. This is used to turn on/off SSL verification for http requests made by the 'requests' library. If running the script in a development environment, it might be necessary to set the flag to `False`**
+**NOTE: In `config/paths-sample.json` there is a property named 'VERIFY_SSL'. This is used to turn on/off SSL verification for http requests made by the 'requests' library. If running the script in a development environment, it might be necessary to set the flag to `false`**
 
 ## Project definition schema
 
