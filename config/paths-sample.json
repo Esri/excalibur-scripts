@@ -1,4 +1,5 @@
 {
   "PROJECT_CONFIG_DIR": "..\\projects",
-  "SHARING_URL": "https://domain/webadaptor/sharing/rest"
+  "SHARING_URL": "https://domain/webadaptor/sharing/rest",
+  "VERIFY_SSL": false
 }
