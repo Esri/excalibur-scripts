@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-A script that uses the ProjectCreator class to create an Excalibur Imagery Project in a Portal.
+A script that uses the ConnectPortal class for authentication and the ProjectCreator class to create an Excalibur Imagery Project in a Portal.
 
 Information about parameters can be viewed by running the script with the -h flag
 """
@@ -27,6 +27,7 @@ import argparse
 import getpass
 import json
 
+from connectPortal import ConnectPortal
 from createProject import ProjectCreator
 
 # Path to directory that holds files with configuration info
@@ -81,12 +82,7 @@ if __name__ == "__main__":
     portalUrl = args.sharingurl
     shareWithOrg = args.orgshare
 
-    print("orgshare argument: {}".format(args.orgshare))
-    print("shareWithOrg variable: {}".format(shareWithOrg))
-    print("verifySSL variable: {}".format(verifySSL))
-
     projectJson = None
-    questionJson = None
 
     try:
         # open projectJson to get portal sharing url
@@ -95,6 +91,7 @@ if __name__ == "__main__":
 
         projectJson = json.loads(projectJson)
 
+        # use portal url from command line argument or from config file
         portalUrl = portalUrl or sharingUrlFromPaths
 
         if not portalUrl:
@@ -102,7 +99,7 @@ if __name__ == "__main__":
                 "Missing portal url. The portal sharing url must be in the --sharingurl argument or in the project config's SHARING_URL property")
 
         # Ask for admin user name and password if needed
-        print("Portal sharing url is {0}".format(portalUrl))
+        print("Portal sharing url is {0}\n".format(portalUrl))
         if not username:
             username = input("Enter user name: ")
         if not username:
@@ -116,9 +113,12 @@ if __name__ == "__main__":
             print("password must be supplied")
             raise Exception("Password must be supplied")
 
+        # Get a GIS object using ConnectPortal methods. The methods prompt for missing arguments
+        connectPortal = ConnectPortal(portalUrl)
+        gis = connectPortal.connectUsernamePassword(username=username, password=password, verifySSL=verifySSL)
+
         print("Creating project!!!!")
-        theCreator = ProjectCreator(
-            username, password, portalUrl, shareWithOrg, verifySSL)
+        theCreator = ProjectCreator(gis=gis, shareWithOrg=shareWithOrg, verifySSL=verifySSL)
         itemId = theCreator.makeProject(projectJson)
 
         print("Project successfully created. Item ID is: {0}".format(itemId))

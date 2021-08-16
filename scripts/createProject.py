@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-""" A script that creates an Excalibur Imagery Project in a Portal using a JSON configuration file
+""" A module that creates an Excalibur Imagery Project in a Portal using a JSON configuration file.
+It uses the ArcGIS API for Python
 
   Attributes
       username (string): The username of a portal member who has permissions to create content
@@ -46,15 +47,12 @@ DEFAULT_PROJECT_VERSION = 2
 DEFAULT_PROJECT_TYPE = "BaseProject"
 
 class ProjectCreator:
-    def __init__(self, username, password, portalSharingUrl, shareWithOrg=False, verifySSL=True):
+    def __init__(self, gis, shareWithOrg=False, verifySSL=True):
         """
         Constructor for the ProjectCreator class
 
         Parameters:
-            username (string): The username of a portal member who has permissions to create content
-            password (string): The password for the user
-            portalSharingUrl (string): The url to the 'sharing' endpoint that is the base url for REST calls.
-                Format is https://<domain>/<webadaptor>/sharing/rest
+            gis (GIS): A GIS made using the arcgis.gis module of the ArcGIS API for Python. See https://developers.arcgis.com/python/api-reference/arcgis.gis.toc.html#gis
             shareWithOrg (boolean): Flag to share the project item with the organization
             verifySSL (boolean): Flag to verify SSL certificate when making https request
         """
@@ -64,21 +62,15 @@ class ProjectCreator:
 
         self._logger.info(
             "### INITIALIZING PROJECT CREATOR FOR NEW PROJECT ###")
-        if not username or not password or not portalSharingUrl:
+        if not gis:
             raise Exception(
-                "Missing argument(s). Supply username, password, and portalSharingUrl")
+                "Missing argument(s). Supply gis")
 
-        # Urls and other info to access and create items in portal
-        self.portalSharingUrl = portalSharingUrl.rstrip("/")
-        self.username = username
-        self.password = password
+         # Urls and other info to access and create items in portal
+        self._gis = gis
+        self.username = gis.properties["user"]["username"]
         self.shareWithOrg = shareWithOrg
         self.verifySSL = verifySSL;
-
-        self._contentUrl = portalSharingUrl + "/content/users/" + username
-
-        # portal token
-        self._token = self._getToken()
 
     def makeProject(self, projectConfig):
         """
@@ -95,7 +87,7 @@ class ProjectCreator:
 
         title = projectConfig["title"]
 
-        # project object holds all info needed to create the portal items
+        # project object holds all info needed to create the portal item
         itemObject = {"title": title, "projectType": DEFAULT_PROJECT_TYPE}
         projectObject = {"instructions": "",
                          "rasterIds": [], "version": DEFAULT_PROJECT_VERSION}
@@ -132,6 +124,8 @@ class ProjectCreator:
         folderResponse = self._createFolder(folderName)
 
         self._folderId = folderResponse["id"]
+        self._folderName = folderName
+
         if folderResponse["new"] == False:
             existingProject = self._getProjectFromFolder(
                 folderResponse["id"], title)
@@ -165,40 +159,15 @@ class ProjectCreator:
             projectObject["observationLayers"] = projectConfig["observationLayers"]
 
         # create Project item
-        itemId = self._createItem()
-        self._logger.info("Created item. Item id: {0}".format(itemId))
+        item = self._createItem()
+        self._logger.info("Created item. Item id: {0}".format(item.id))
 
         # share items with organization
         if self.shareWithOrg:
-            self._shareItems(itemId)
+            self._shareItems(item)
 
-        return itemId
+        return item.id
 
-    def _getToken(self):
-        """
-        Private method that generates a token used to access the portal
-
-        Returns:
-            string: The token
-        """
-        data = {"username": self.username, "password": self.password,
-                "referer": "clientIp", "f": "json"}
-        url = self.portalSharingUrl + "/generateToken"
-
-        r = requests.post(url, data=data, verify=self.verifySSL)
-
-        if r.status_code != 200:
-            message = "Error in htttp request to get token: Http status code: {0}".format(
-                r.status_code)
-            raise Exception(message)
-
-        response = r.json()
-        if "error" in response:
-            message = "Error getting token for portal: {!s}".format(
-                response["error"])
-            raise Exception(message)
-
-        return response["token"]
 
     def _createFolder(self, name):
         """
@@ -214,56 +183,26 @@ class ProjectCreator:
         """
 
         # get existing folders to see if "name" exists
-        url = self._contentUrl
-        data = {"f": "json", "token": self._token, "num": 1}
-        r = requests.get(url, params=data, verify=self.verifySSL)
-
-        if (r.status_code != 200):
-            raise Exception("Error in htttp request to get existing folders")
-
-        response = r.json()
-        if "error" in response:
-            message = "Error getting current folders from portal: {0}".format(
-                json.dumps(response["error"]))
-            raise Exception(message)
-
-        folders = response["folders"]
-
-        # Check if folder already exists and return the id if it does
-        for f in folders:
+        userManager = self._gis.users
+        userInfo = userManager.get(self.username)
+        for f in userInfo.folders:
             if f["title"] == name:
                 return {"new": False, "id": f["id"]}
 
         # if we made it here a new folder needs to be created
-        url = self._contentUrl + "/createFolder"
+        createFolderResponse = self._gis.content.create_folder(name)
+        return {"new": True, "id": createFolderResponse["id"]}
 
-        data = {"f": "json", "token": self._token, "title": name}
-
-        r = requests.post(url, data=data, verify=self.verifySSL)
-
-        if r.status_code != 200:
-            raise Exception("Error in http request to create folder")
-
-        response = r.json()
-        if not "success" in response or not response["success"]:
-            message = "Error creating folder: {!s}".format(
-                json.dumps(response["error"]["message"]))
-            raise Exception(message)
-
-        return {"new": True, "id": response["folder"]["id"]}
 
     def _createItem(self):
         """
         Private method that adds the Imagery Project item to the portal.
 
         Returns:
-            string: The id of the ImageryProject item
+            item: An arcgis.gis.Item object
         """
 
-        url = self._contentUrl + "/" + self._folderId + "/addItem"
-
-        item = {"f": "json", "token": self._token}
-        item["title"] = self._itemObject["title"]
+        item = {"title": self._itemObject["title"]}
         item["snippet"] = self._itemObject["snippet"]
         item["type"] = "Excalibur Imagery Project"
         item["typeKeywords"] = "{0}, {1}".format(
@@ -271,21 +210,9 @@ class ProjectCreator:
         item["tags"] = "Image Project"
         item["text"] = json.dumps(self._projectObject)
 
-        errMsg = None
+        addItemResponse = self._gis.content.add(item, folder=self._folderName)
+        return addItemResponse
 
-        r = requests.post(url, data=item, verify=self.verifySSL)
-
-        if r.status_code != 200:
-            raise Exception("Error in http request to create the portal item")
-
-        response = r.json()
-        if not "success" in response or not response["success"]:
-            errMsg = "Error creating the portal item. {!s}".format(json.dumps(
-                response["error"]))
-            raise Exception(errMsg)
-
-        itemId = response["id"]
-        return itemId
 
     def _getProjectFromFolder(self, folderId, projectName):
         """
@@ -296,52 +223,26 @@ class ProjectCreator:
             projectName (string): Name of the Imagery Project
 
         Returns:
-            string: Id of the project that was found. If no project is found, nothing is returned
+            item: An arcgis.gis.Item object
         """
 
         queryString = "ownerfolder:{0} title:\"{1}\"".format(
             folderId, projectName)
 
-        url = self.portalSharingUrl + "/search"
-        data = {"f": "json", "token": self._token, "q": queryString}
+        searchResults = self._gis.content.search(queryString, item_type="Excalibur Imagery Project")
 
-        r = requests.get(url, params=data, verify=self.verifySSL)
-
-        if r.status_code != 200:
-            message = "Error searching for project. Http code: {!s}".format(
-                r.status_code)
-            raise Exception(message)
-
-        response = r.json()
-
-        if response["total"] > 0:
-            return response["results"][0]
+        if len(searchResults):
+            return searchResults[0].id
         else:
-            return
+            return None
 
-    def _shareItems(self, projectId):
+
+    def _shareItems(self, projectItem):
         """
         Private method that shares the project item with the portal organization
 
         Parameters:
-            projectId (string): The id of the Imagery Project item
+            projectItem (arcgis.gis.Item): The Imagery Project item
         """
 
-        url = self._contentUrl + "/shareItems"
-
-        # share project with org
-        items = projectId
-
-        data = {"f": "json", "token": self._token}
-        data["org"] = True
-        data["items"] = items
-
-        r = requests.post(url, data=data, verify=self.verifySSL)
-
-        if r.status_code != 200:
-            message = "Error sharing items. Http code: {!s}".format(
-                r.status_code)
-            raise Exception(message)
-
-        response = r.json()
-        return response
+        return projectItem.share(org=True)
