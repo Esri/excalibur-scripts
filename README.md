@@ -23,14 +23,13 @@ Detailed instructions are in the [Creating a project](#creating-a-project) secti
 
 ### Python 3
 
-The scripts require Python 3 to be installed on your machine. The scripts were developed using Python version 3.8.6. Python 3 is already installed on your machine if you are running ArcGIS Pro. To see if Python is installed, open a terminal and run the command `python`. To see if Python is installed, open a terminal and run the command `python`. If installed, you will see the version of Python displayed and be at a command prompt for entering Python commands.
+The scripts require Python 3 to be installed on your machine. The scripts were developed using Python version 3.8.6. Python 3 is already installed on your machine if you are running ArcGIS Pro. To see if Python is installed, open a terminal and run the command `python`. If installed, you will see the version of Python displayed and be at a command prompt for entering Python commands.
 
 If Python is not installed on your machine, you can download the version for your OS from the [Python download site](https://www.python.org/downloads/). It is recommended to add the path to the Python executable to the `Paths` on your machine. Once installed, open a terminal and run the command `python` and make sure it runs without errors.
 
-### Requests library
+### ArcGIS API for Python
 
-**Requests** is a Python library that simplifies making http requests. To install it, in a terminal run the command `python -m pip install requests`
-
+Connections to the portal and content creation are handled via the ArcGIS API for Python. You can get information about it at the [API site](https://developers.arcgis.com/python/). Detailed instructions for installing the API are [here](https://developers.arcgis.com/python/guide/install-and-set-up/).
 ### ArcGIS Enterprise Instance
 
 Excalibur is a Portal application that is supported on ArcGIS Enterprise version 10.7 and higher. To run the scripts, you must be a user on an ArcGIS Enterprise instance and you must have permissions to create new items.
@@ -48,7 +47,7 @@ This is where the logs are written. The current log file is named `excalibur.log
 This is where the JSON files defining a project are stored. Samples are provided. You will need to make new JSON files and follow the samples to define your own projects
 
 ### scripts directory
-Contains the two Python scripts that write the project to the portal.
+Contains the two Python scripts that write the project to the portal and the script that connects to the portal using the supplied credentials.
 
 
 ## Creating a project
