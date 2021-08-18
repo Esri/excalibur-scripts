@@ -79,36 +79,68 @@ Contains the two Python scripts that write the project to the portal and the scr
 
 The properties for an imagery project. The `focusImageLayer` and `observationLayers` property are objects and their schema is described below.
 
-| Name   | Description  | Required  | Default |
-| ------ | -----------  | -------   | ------  |
-| title  | The main display title for the project | Yes | |
-| summary | A short summary of the project | No | There is no default so it is suggested to supply a summary |
-| description | A more detailed description of the project | No | No default |
-| instructions | Instructions for the person who is going to be working with the project | Yes | |
-| webmapId | The item id of a webmap in the portal | No | If the webmapId is not specified, the user's default basemap is used |
-| focusImageLayer | The descriptor for an imagery layer. See below for the schema | Yes | No default |
-| observationLayers | Array of descriptors for Feature Layers used to collect observations | No | No default |
+| Name   | Description  | Type  | Required  | Default |
+| ------ | -----------  | ----- | -------   | ------  |
+| title  | The main display title for the project | string | Yes | |
+| summary | A short summary of the project | string | No | There is no default so it is suggested to supply a summary |
+| description | A more detailed description of the project | string | No | No default |
+| instructions | Instructions for the person who is going to be working with the project | string | Yes | |
+| webmapId | The item id of a webmap in the portal | string | No | If the webmapId is not specified, the user's default basemap is used |
+| focusImageLayer | The descriptor for an imagery layer. See below for the schema | *Focus Image Layer* | Yes | |
+| observationLayers | Array of descriptors for Feature Layers used to collect observations. | *Observation Layer[]* See below for the schema | No | |
 
 ### Focus Image Layer
 
+Supported service types at versions of Excalibur
+* ArcGIS Image Service - as of `v1.0`
+* WMS Service - as of `v2.1`
+* WMTS Service - as of `v2.1`
+
 The properties for the `focusImageLayer` object.
 
-| Name   | Description  | Required  | Default |
-| ------ | -----------  | -------   | ------  |
-| serviceType | The type of service used for the layer. The options are `arcgis` for an ArcGIS Image Service or `wms` for an OGC WMS Service | Yes | |
-| serviceUrl | Url to the service | Yes | |
-| rasterIds | An array of numbers. These are the ids of images in an ArcGIS Image Service. If specified, the layer will be configured to show only the specified images. Only valid when serviceType is `arcgis` | No | [] |
-| layerNames | An array of strings. These are the sublayer names in a WMS Service. If specified, the layer will be configured to show only the specified sublayers. Only valid when serviceType is `wms` | No | [] |
+| Name   | Description  | Type  | Required  | Default |
+| ------ | -----------  | ----- | --------  | ------- |
+| serviceType | The type of service used for the layer. The options are `arcgis` for an ArcGIS Image Service, `wms` for an OGC WMS Service, `wmts` for an OGC WMTS Service | Yes | |
+| serviceUrl | Url to the service | string | Yes | |
+| rasterIds | These are the ids of images in an ArcGIS Image Service. If specified, the layer will be configured to show only the specified images. Only valid when serviceType is `arcgis` | number[] | No | [] |
+| layerNames | An array of strings. These are the sublayer names in a WMS or WMTS Service. If specified, the layer will be configured to show only the specified sublayers. Only valid when serviceType is `wms` or `wmts`. *WMTS* layers only support displaying ONE sublayer. | string[] | No | [] |
 
 ### Observation Layer
 
+* *Observation Layer* supported since `v1.0`
+* *enrichmentDefinition* supported since `v2.3`
+
 The properties for the objects in the `observationLayers` array.
 
-| Name   | Description  | Required  | Default |
-| ------ | -----------  | -------   | ------  |
-| type   | The type of layer. For now the only option is `Feature Layer` | Yes | |
-| itemId | The id of a Feature Layer item in the same portal where the project is stored. Either this or the `url` property must be supplied | No | |
-| url    | The url to an ArcGIS Feature Service layer. Either this or the `itemId` property must be supplied | No | |
+| Name   | Description  | Type  | Required  | Default |
+| ------ | -----------  | ----- | --------  | ------- |
+| type   | The type of layer. For now the only option is `Feature Layer` | string | Yes | |
+| itemId | The id of a Feature Layer item in the same portal where the project is stored. Either this or the `url` property must be supplied | string | No | |
+| url    | The url to an ArcGIS Feature Service layer. Either this or the `itemId` property must be supplied | string | No | |
+| enrichmentDefinition | An object describing how enrichment fields are populated. The geometry type of the Observation Layer must be *Point* | *Enrichment Definition* See below for schema | No |  |
+
+### Enrichment Definition
+
+| Name   | Description  | Type  | Required  | Default |
+| ------ | -----------  | ----- | --------  | ------- |
+| title  | A short descriptive title for the enrichment definition | string | Yes | |
+| description | A short description of the enrichment definition | string | No | |
+| layers | The Enrichment Layers that are part of this definition | *Enrichment Layer Definition[]* See below for schema | Yes | |
+
+### Enrichment Layer Definition
+
+| Name   | Description  | Type  | Required  | Default |
+| ------ | -----------  | ----- | --------  | ------- |
+| sourceUrl  | The url to the service. (Either `sourceUrl` or `sourceItemId`) must be supplied. The geometry type of the service layer must be *Polygon* and the layer must be in the WebMap of the project | string | No | |
+| sourceItemId  | The itemId of a layer in the portal hosting the application. (Either `sourceUrl` or `sourceItemId`) | string | No | |
+| fields | Information on source and destination fields | *Enrichment Field Definition[]* See below for schema | Yes | |
+
+### Enrichment Field Definition
+
+| Name   | Description  | Type  | Required  | Default |
+| ------ | -----------  | ----- | --------  | ------- |
+| source | Name of the field in the enrichment source service | string | Yes | |
+| destination | Name of the field in the observation layer | string | Yes | |
 
 ## Sample Project Configurations
 
@@ -182,6 +214,24 @@ The properties for the objects in the `observationLayers` array.
 }
 ```
 
+#### WMTS Service
+
+NOTE: WMTS service layers are cached and **ONLY ONE** can be displayed as the focus image layer in a project. So the `layerNames` property can only have one layer name.
+```
+{
+  "title": "A simple imagery project",
+  "summary": "A simple project with a WMTS layer",
+  "description": "",
+  "instructions": "Look for weather",
+  "focusImageLayer": {
+    "serviceType": "wmts",
+    "serviceUrl": "https://server/service-name",
+    "rasterIds": []
+    "layerNames": ["radar-base-reflectivity"]
+  }
+}
+```
+
 ### Project with observation layer(s)
 
 #### Single observation layer
@@ -203,6 +253,7 @@ The properties for the objects in the `observationLayers` array.
       "type": "Feature Layer",
       "itemId": "123456789abcdefg"
     }
+  ]
 }
 ```
 
@@ -233,6 +284,50 @@ This also shows the `webmapId` property
     }
   ],
   "webmapId": "12345678"
+}
+```
+
+#### Observation layer with enrichment definition
+
+```
+{
+  "title": "Imagery project with observations getting data from another layer",
+  "summary": "A project with an observation layer that gets its 'parcelid' field calculated from the parcel boundary polygon layer's 'id' field",
+  "description": "",
+  "instructions": "Add a point on top of anything of interest and enter comments",
+  "webmapId": "12345678",
+  "focusImageLayer": {
+    "serviceType": "arcgis",
+    "serviceUrl": "https://server/service-name/ImageServer",
+    "rasterIds": [
+      1,
+      2,
+      3
+    ],
+    "layerNames": []
+  },
+  "observationLayers": [
+    {
+      "itemId": "ead6deb3d93848c4a7fd58025cc2cdaa",
+      "title": "Abandoned Building Locations with Parcel id",
+      "type": "Feature Layer",
+      "url": "https://my.domain.name/arcgis/rest/services/Hosted/abandoned_buildings/FeatureServer",
+      "enrichmentDefinition": {
+        "title": "Building Parcel Info",
+        "layers": [
+          {
+            "sourceUrl": "https://path/to/parcel/boundaries/FeatureServer/0",
+            "fields": [
+              {
+                "source": "id",
+                "destination": "parcelid"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }
 ```
 
