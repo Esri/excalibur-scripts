@@ -56,6 +56,8 @@ Contains the two Python scripts that write the project to the portal and the scr
 * Make a copy of `config/paths-sample.json` and name it **paths.json**.
 * Update the `SHARING_URL` property to point to your portal. Make sure the url ends in `sharing/rest`.
 
+**NOTE: In `config/paths-sample.json` there is a property named 'VERIFY_SSL'. This is used to turn on/off SSL verification for http requests made by the 'requests' library. If running the script in a development environment, it might be necessary to set the flag to `false`**
+
 ### Make project definition
 * Copy one of the JSON files in the `projects` directory and name it anything.
 * Update the JSON to describe your project. See the [Project definition schema](#project-definition-schema) section for details about the JSON schema.
@@ -70,8 +72,6 @@ Contains the two Python scripts that write the project to the portal and the scr
     * **-p** or **--password**: Your portal user's password. If the argument is not specified you get prompted for it.
     * **-o** or **--orgshare**: `True`/`False` flag for sharing the project item with the organization. Default is `False` (do not share it).
 * If the script runs successfully, you will see a console log in the terminal that has the item id of the Excalibur Imagery Project's portal item.
-
-**NOTE: In `config/paths-sample.json` there is a property named 'VERIFY_SSL'. This is used to turn on/off SSL verification for http requests made by the 'requests' library. If running the script in a development environment, it might be necessary to set the flag to `false`**
 
 ## Project definition schema
 
@@ -114,9 +114,8 @@ The properties for the objects in the `observationLayers` array.
 
 | Name   | Description  | Type  | Required  | Default |
 | ------ | -----------  | ----- | --------  | ------- |
-| type   | The type of layer. For now the only option is `Feature Layer` | string | Yes | |
-| itemId | The id of a Feature Layer item in the same portal where the project is stored. Either this or the `url` property must be supplied | string | No | |
-| url    | The url to an ArcGIS Feature Service layer. Either this or the `itemId` property must be supplied | string | No | |
+| itemId | The id of a Feature Layer item in the same portal where the project is stored. | string | Yes | |
+| url    | The url to an ArcGIS Feature Service layer. | string | No | |
 | enrichmentDefinition | An object describing how enrichment fields are populated. The geometry type of the Observation Layer must be *Point* | *Enrichment Definition* See below for schema | No |  |
 
 ### Enrichment Definition
@@ -131,16 +130,16 @@ The properties for the objects in the `observationLayers` array.
 
 | Name   | Description  | Type  | Required  | Default |
 | ------ | -----------  | ----- | --------  | ------- |
-| sourceUrl  | The url to the service. (Either `sourceUrl` or `sourceItemId`) must be supplied. The geometry type of the service layer must be *Polygon* and the layer must be in the WebMap of the project | string | No | |
-| sourceItemId  | The itemId of a layer in the portal hosting the application. (Either `sourceUrl` or `sourceItemId`) | string | No | |
 | fields | Information on source and destination fields | *Enrichment Field Definition[]* See below for schema | Yes | |
+| sourceItemId  | The itemId of a layer in the portal hosting the application. | string | Yes | |
+| sourceUrl  | The url to the service. The geometry type of the service layer must be *Polygon* and the layer must be in the WebMap of the project | string | No | |
 
 ### Enrichment Field Definition
 
 | Name   | Description  | Type  | Required  | Default |
 | ------ | -----------  | ----- | --------  | ------- |
-| source | Name of the field in the enrichment source service | string | Yes | |
-| destination | Name of the field in the observation layer | string | Yes | |
+| source | Name of the field in the enrichment source service. This is the name of the field, NOT THE ALIAS | string | Yes | |
+| destination | Name of the field in the observation layer. This is the name of the field, NOT THE ALIAS | string | Yes | |
 
 ## Sample Project Configurations
 
@@ -250,14 +249,13 @@ NOTE: WMTS service layers are cached and **ONLY ONE** can be displayed as the fo
   },
   "observationLayers": [
     {
-      "type": "Feature Layer",
       "itemId": "123456789abcdefg"
     }
   ]
 }
 ```
 
-#### Multiple observation layers (one by url, one by item id)
+#### Multiple observation layers (one by item id only, one by item id and url)
 
 This also shows the `webmapId` property
 
@@ -275,12 +273,11 @@ This also shows the `webmapId` property
   },
   "observationLayers": [
     {
-      "type": "Feature Layer",
       "itemId": "123456789abcdefg"
     },
     {
-      "type": "Feature Layer",
-      "url": "url to Feature Service"
+      "itemId": "hijklmnop9876543",
+      "url": "https://server/service-name/FeatureServer/2"
     }
   ],
   "webmapId": "12345678"
@@ -310,12 +307,12 @@ This also shows the `webmapId` property
     {
       "itemId": "ead6deb3d93848c4a7fd58025cc2cdaa",
       "title": "Abandoned Building Locations with Parcel id",
-      "type": "Feature Layer",
       "url": "https://my.domain.name/arcgis/rest/services/Hosted/abandoned_buildings/FeatureServer",
       "enrichmentDefinition": {
         "title": "Building Parcel Info",
         "layers": [
           {
+            "itemId": "fghijklmnop123456xyz",
             "sourceUrl": "https://path/to/parcel/boundaries/FeatureServer/0",
             "fields": [
               {

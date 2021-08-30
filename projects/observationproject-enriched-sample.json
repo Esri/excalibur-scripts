@@ -11,16 +11,8 @@
   },
   "observationLayers": [
     {
-      "type": "Feature Layer",
-      "itemId": "portal item id of feature service"
-    },
-    {
-      "type": "Feature Layer",
-      "url": "url to Feature Service - https://server-name/webadaptor/service-name/FeatureServer/layer-id"
-    },
-    {
-      "type": "Feature Layer",
-      "url": "url to Feature Service - https://server-name/webadaptor/service-name/FeatureServer/layer-id",
+      "itemId": "portal item id of feature service",
+      "url": "url to Observation Feature Service - https://server-name/webadaptor/service-name/FeatureServer/layer-id",
       "enrichmentDefinition": {
         "title": "Title for enrichment definition",
         "layers": [
