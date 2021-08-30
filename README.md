@@ -23,14 +23,13 @@ Detailed instructions are in the [Creating a project](#creating-a-project) secti
 
 ### Python 3
 
-The scripts require Python 3 to be installed on your machine. The scripts were developed using Python version 3.8.6. Python 3 is already installed on your machine if you are running ArcGIS Pro. To see if Python is installed, open a terminal and run the command `python`. To see if Python is installed, open a terminal and run the command `python`. If installed, you will see the version of Python displayed and be at a command prompt for entering Python commands.
+The scripts require Python 3 to be installed on your machine. The scripts were developed using Python version 3.8.6. Python 3 is already installed on your machine if you are running ArcGIS Pro. To see if Python is installed, open a terminal and run the command `python`. If installed, you will see the version of Python displayed and be at a command prompt for entering Python commands.
 
 If Python is not installed on your machine, you can download the version for your OS from the [Python download site](https://www.python.org/downloads/). It is recommended to add the path to the Python executable to the `Paths` on your machine. Once installed, open a terminal and run the command `python` and make sure it runs without errors.
 
-### Requests library
+### ArcGIS API for Python
 
-**Requests** is a Python library that simplifies making http requests. To install it, in a terminal run the command `python -m pip install requests`
-
+Connections to the portal and content creation are handled via the ArcGIS API for Python. You can get information about it at the [API site](https://developers.arcgis.com/python/). Detailed instructions for installing the API are [here](https://developers.arcgis.com/python/guide/install-and-set-up/).
 ### ArcGIS Enterprise Instance
 
 Excalibur is a Portal application that is supported on ArcGIS Enterprise version 10.7 and higher. To run the scripts, you must be a user on an ArcGIS Enterprise instance and you must have permissions to create new items.
@@ -48,7 +47,7 @@ This is where the logs are written. The current log file is named `excalibur.log
 This is where the JSON files defining a project are stored. Samples are provided. You will need to make new JSON files and follow the samples to define your own projects
 
 ### scripts directory
-Contains the two Python scripts that write the project to the portal.
+Contains the two Python scripts that write the project to the portal and the script that connects to the portal using the supplied credentials.
 
 
 ## Creating a project
@@ -56,6 +55,8 @@ Contains the two Python scripts that write the project to the portal.
 ### Set up portal url
 * Make a copy of `config/paths-sample.json` and name it **paths.json**.
 * Update the `SHARING_URL` property to point to your portal. Make sure the url ends in `sharing/rest`.
+
+**NOTE: In `config/paths-sample.json` there is a property named 'VERIFY_SSL'. This is used to turn on/off SSL verification for http requests made by the 'requests' library. If running the script in a development environment, it might be necessary to set the flag to `false`**
 
 ### Make project definition
 * Copy one of the JSON files in the `projects` directory and name it anything.
@@ -72,44 +73,73 @@ Contains the two Python scripts that write the project to the portal.
     * **-o** or **--orgshare**: `True`/`False` flag for sharing the project item with the organization. Default is `False` (do not share it).
 * If the script runs successfully, you will see a console log in the terminal that has the item id of the Excalibur Imagery Project's portal item.
 
-**NOTE: In `config/paths-sample.json` there is a property named 'VERIFY_SSL'. This is used to turn on/off SSL verification for http requests made by the 'requests' library. If running the script in a development environment, it might be necessary to set the flag to `false`**
-
 ## Project definition schema
 
 ### Imagery Project
 
 The properties for an imagery project. The `focusImageLayer` and `observationLayers` property are objects and their schema is described below.
 
-| Name   | Description  | Required  | Default |
-| ------ | -----------  | -------   | ------  |
-| title  | The main display title for the project | Yes | |
-| summary | A short summary of the project | No | There is no default so it is suggested to supply a summary |
-| description | A more detailed description of the project | No | No default |
-| instructions | Instructions for the person who is going to be working with the project | Yes | |
-| webmapId | The item id of a webmap in the portal | No | If the webmapId is not specified, the user's default basemap is used |
-| focusImageLayer | The descriptor for an imagery layer. See below for the schema | Yes | No default |
-| observationLayers | Array of descriptors for Feature Layers used to collect observations | No | No default |
+| Name   | Description  | Type  | Required  | Default |
+| ------ | -----------  | ----- | -------   | ------  |
+| title  | The main display title for the project | string | Yes | |
+| summary | A short summary of the project | string | No | There is no default so it is suggested to supply a summary |
+| description | A more detailed description of the project | string | No | No default |
+| instructions | Instructions for the person who is going to be working with the project | string | Yes | |
+| webmapId | The item id of a webmap in the portal | string | No | If the webmapId is not specified, the user's default basemap is used |
+| focusImageLayer | The descriptor for an imagery layer. See below for the schema | *Focus Image Layer* | Yes | |
+| observationLayers | Array of descriptors for Feature Layers used to collect observations. | *Observation Layer[]* See below for the schema | No | |
 
 ### Focus Image Layer
 
+Supported service types at versions of Excalibur
+* ArcGIS Image Service - as of `v1.0`
+* WMS Service - as of `v2.1`
+* WMTS Service - as of `v2.1`
+
 The properties for the `focusImageLayer` object.
 
-| Name   | Description  | Required  | Default |
-| ------ | -----------  | -------   | ------  |
-| serviceType | The type of service used for the layer. The options are `arcgis` for an ArcGIS Image Service or `wms` for an OGC WMS Service | Yes | |
-| serviceUrl | Url to the service | Yes | |
-| rasterIds | An array of numbers. These are the ids of images in an ArcGIS Image Service. If specified, the layer will be configured to show only the specified images. Only valid when serviceType is `arcgis` | No | [] |
-| layerNames | An array of strings. These are the sublayer names in a WMS Service. If specified, the layer will be configured to show only the specified sublayers. Only valid when serviceType is `wms` | No | [] |
+| Name   | Description  | Type  | Required  | Default |
+| ------ | -----------  | ----- | --------  | ------- |
+| serviceType | The type of service used for the layer. The options are `arcgis` for an ArcGIS Image Service, `wms` for an OGC WMS Service, `wmts` for an OGC WMTS Service | Yes | |
+| serviceUrl | Url to the service | string | Yes | |
+| rasterIds | These are the ids of images in an ArcGIS Image Service. If specified, the layer will be configured to show only the specified images. Only valid when serviceType is `arcgis` | number[] | No | [] |
+| layerNames | An array of strings. These are the sublayer names in a WMS or WMTS Service. If specified, the layer will be configured to show only the specified sublayers. Only valid when serviceType is `wms` or `wmts`. *WMTS* layers only support displaying ONE sublayer. | string[] | No | [] |
 
 ### Observation Layer
 
+* *Observation Layer* supported since `v1.0`
+* *enrichmentDefinition* supported since `v2.3`
+
 The properties for the objects in the `observationLayers` array.
 
-| Name   | Description  | Required  | Default |
-| ------ | -----------  | -------   | ------  |
-| type   | The type of layer. For now the only option is `Feature Layer` | Yes | |
-| itemId | The id of a Feature Layer item in the same portal where the project is stored. Either this or the `url` property must be supplied | No | |
-| url    | The url to an ArcGIS Feature Service layer. Either this or the `itemId` property must be supplied | No | |
+| Name   | Description  | Type  | Required  | Default |
+| ------ | -----------  | ----- | --------  | ------- |
+| itemId | The id of a Feature Layer item in the same portal where the project is stored. | string | Yes | |
+| url    | The url to an ArcGIS Feature Service layer. | string | No | |
+| enrichmentDefinition | An object describing how enrichment fields are populated. The geometry type of the Observation Layer must be *Point* | *Enrichment Definition* See below for schema | No |  |
+
+### Enrichment Definition
+
+| Name   | Description  | Type  | Required  | Default |
+| ------ | -----------  | ----- | --------  | ------- |
+| title  | A short descriptive title for the enrichment definition | string | Yes | |
+| description | A short description of the enrichment definition | string | No | |
+| layers | The Enrichment Layers that are part of this definition | *Enrichment Layer Definition[]* See below for schema | Yes | |
+
+### Enrichment Layer Definition
+
+| Name   | Description  | Type  | Required  | Default |
+| ------ | -----------  | ----- | --------  | ------- |
+| fields | Information on source and destination fields | *Enrichment Field Definition[]* See below for schema | Yes | |
+| sourceItemId  | The itemId of a layer in the portal hosting the application. | string | Yes | |
+| sourceUrl  | The url to the service. The geometry type of the service layer must be *Polygon* and the layer must be in the WebMap of the project | string | No | |
+
+### Enrichment Field Definition
+
+| Name   | Description  | Type  | Required  | Default |
+| ------ | -----------  | ----- | --------  | ------- |
+| source | Name of the field in the enrichment source service. This is the name of the field, NOT THE ALIAS | string | Yes | |
+| destination | Name of the field in the observation layer. This is the name of the field, NOT THE ALIAS | string | Yes | |
 
 ## Sample Project Configurations
 
@@ -183,6 +213,24 @@ The properties for the objects in the `observationLayers` array.
 }
 ```
 
+#### WMTS Service
+
+NOTE: WMTS service layers are cached and **ONLY ONE** can be displayed as the focus image layer in a project. So the `layerNames` property can only have one layer name.
+```
+{
+  "title": "A simple imagery project",
+  "summary": "A simple project with a WMTS layer",
+  "description": "",
+  "instructions": "Look for weather",
+  "focusImageLayer": {
+    "serviceType": "wmts",
+    "serviceUrl": "https://server/service-name",
+    "rasterIds": []
+    "layerNames": ["radar-base-reflectivity"]
+  }
+}
+```
+
 ### Project with observation layer(s)
 
 #### Single observation layer
@@ -201,13 +249,13 @@ The properties for the objects in the `observationLayers` array.
   },
   "observationLayers": [
     {
-      "type": "Feature Layer",
       "itemId": "123456789abcdefg"
     }
+  ]
 }
 ```
 
-#### Multiple observation layers (one by url, one by item id)
+#### Multiple observation layers (one by item id only, one by item id and url)
 
 This also shows the `webmapId` property
 
@@ -225,15 +273,58 @@ This also shows the `webmapId` property
   },
   "observationLayers": [
     {
-      "type": "Feature Layer",
       "itemId": "123456789abcdefg"
     },
     {
-      "type": "Feature Layer",
-      "url": "url to Feature Service"
+      "itemId": "hijklmnop9876543",
+      "url": "https://server/service-name/FeatureServer/2"
     }
   ],
   "webmapId": "12345678"
+}
+```
+
+#### Observation layer with enrichment definition
+
+```
+{
+  "title": "Imagery project with observations getting data from another layer",
+  "summary": "A project with an observation layer that gets its 'parcelid' field calculated from the parcel boundary polygon layer's 'id' field",
+  "description": "",
+  "instructions": "Add a point on top of anything of interest and enter comments",
+  "webmapId": "12345678",
+  "focusImageLayer": {
+    "serviceType": "arcgis",
+    "serviceUrl": "https://server/service-name/ImageServer",
+    "rasterIds": [
+      1,
+      2,
+      3
+    ],
+    "layerNames": []
+  },
+  "observationLayers": [
+    {
+      "itemId": "ead6deb3d93848c4a7fd58025cc2cdaa",
+      "title": "Abandoned Building Locations with Parcel id",
+      "url": "https://my.domain.name/arcgis/rest/services/Hosted/abandoned_buildings/FeatureServer",
+      "enrichmentDefinition": {
+        "title": "Building Parcel Info",
+        "layers": [
+          {
+            "itemId": "fghijklmnop123456xyz",
+            "sourceUrl": "https://path/to/parcel/boundaries/FeatureServer/0",
+            "fields": [
+              {
+                "source": "id",
+                "destination": "parcelid"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }
 ```
 

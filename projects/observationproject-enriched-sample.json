@@ -1,0 +1,33 @@
+{
+  "title": "Imagery project with observations",
+  "summary": "A project with observation layers and a webmap",
+  "description": "",
+  "instructions": "Add a point on top of anything of interest and enter comments",
+  "focusImageLayer": {
+    "serviceType": "arcgis",
+    "serviceUrl": "url to image service",
+    "rasterIds": [],
+    "layerNames": []
+  },
+  "observationLayers": [
+    {
+      "itemId": "portal item id of feature service",
+      "url": "url to Observation Feature Service - https://server-name/webadaptor/service-name/FeatureServer/layer-id",
+      "enrichmentDefinition": {
+        "title": "Title for enrichment definition",
+        "layers": [
+          {
+            "sourceUrl": "url to Feature Service that has geoenrichment fields - https://server-name/webadaptor/service-name/FeatureServer/layer-id",
+            "fieldDefinitions": [
+              {
+                "source": "field name in geoenrichment layer",
+                "destination": "field name in observation layer"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "webmapId": "12345678"
+}
