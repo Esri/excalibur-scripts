@@ -12,12 +12,21 @@
   "observationLayers": [
     {
       "itemId": "portal item id of feature service",
-      "url": "url to Observation Feature Service - https://server-name/webadaptor/service-name/FeatureServer/layer-id",
       "enrichmentDefinition": {
-        "title": "Title for enrichment definition",
+        "description": "Description of enrichment definition",
         "layers": [
           {
             "sourceUrl": "url to Feature Service that has geoenrichment fields - https://server-name/webadaptor/service-name/FeatureServer/layer-id",
+            "fieldDefinitions": [
+              {
+                "source": "field name in geoenrichment layer",
+                "destination": "field name in observation layer"
+              }
+            ]
+          },
+          {
+            "sourceItemId": "itemId of feature service",
+            "layerId": 2,
             "fieldDefinitions": [
               {
                 "source": "field name in geoenrichment layer",
