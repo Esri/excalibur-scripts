@@ -115,6 +115,7 @@ The properties for the objects in the `observationLayers` array.
 | Name   | Description  | Type  | Required  | Default |
 | ------ | -----------  | ----- | --------  | ------- |
 | itemId | The id of a Feature Layer item in the same portal where the project is stored. | string | Yes | |
+| layerId | The id of the layer in a multiple layer feature service | number | No | 0 |
 | url    | The url to an ArcGIS Feature Service layer. | string | No | |
 | enrichmentDefinition | An object describing how enrichment fields are populated. The geometry type of the Observation Layer must be *Point* | *Enrichment Definition* See below for schema | No |  |
 
@@ -122,8 +123,7 @@ The properties for the objects in the `observationLayers` array.
 
 | Name   | Description  | Type  | Required  | Default |
 | ------ | -----------  | ----- | --------  | ------- |
-| title  | A short descriptive title for the enrichment definition | string | Yes | |
-| description | A short description of the enrichment definition | string | No | |
+| description | A short description of the enrichment definition | string | Yes | |
 | layers | The Enrichment Layers that are part of this definition | *Enrichment Layer Definition[]* See below for schema | Yes | |
 
 ### Enrichment Layer Definition
@@ -131,8 +131,9 @@ The properties for the objects in the `observationLayers` array.
 | Name   | Description  | Type  | Required  | Default |
 | ------ | -----------  | ----- | --------  | ------- |
 | fields | Information on source and destination fields | *Enrichment Field Definition[]* See below for schema | Yes | |
-| sourceItemId  | The itemId of a layer in the portal hosting the application. | string | Yes | |
-| sourceUrl  | The url to the service. The geometry type of the service layer must be *Polygon* and the layer must be in the WebMap of the project | string | No | |
+| sourceItemId  | The itemId of a layer in the portal hosting the application. The geometry type of the service layer must be *Polygon* and the layer must be in the WebMap of the project. This or `sourceUrl` must be set. | string | No | |
+| sourceUrl  | The url to the service. The geometry type of the service layer must be *Polygon* and the layer must be in the WebMap of the project. This or `sourceItemId` must be set.  | string | No | |
+| layerId | The id of the layer in a multiple layer feature service | number | No | 0 |
 
 ### Enrichment Field Definition
 
@@ -255,7 +256,7 @@ NOTE: WMTS service layers are cached and **ONLY ONE** can be displayed as the fo
 }
 ```
 
-#### Multiple observation layers (one by item id only, one by item id and url)
+#### Multiple observation layers (one with layerId set)
 
 This also shows the `webmapId` property
 
@@ -277,7 +278,7 @@ This also shows the `webmapId` property
     },
     {
       "itemId": "hijklmnop9876543",
-      "url": "https://server/service-name/FeatureServer/2"
+      layerId: 2
     }
   ],
   "webmapId": "12345678"
@@ -306,14 +307,11 @@ This also shows the `webmapId` property
   "observationLayers": [
     {
       "itemId": "ead6deb3d93848c4a7fd58025cc2cdaa",
-      "title": "Abandoned Building Locations with Parcel id",
-      "url": "https://my.domain.name/arcgis/rest/services/Hosted/abandoned_buildings/FeatureServer",
       "enrichmentDefinition": {
-        "title": "Building Parcel Info",
+        "description": "Building Parcel Info",
         "layers": [
           {
-            "itemId": "fghijklmnop123456xyz",
-            "sourceUrl": "https://path/to/parcel/boundaries/FeatureServer/0",
+            "sourceUrl": "https://path/to/parcel/boundaries/FeatureServer",
             "fields": [
               {
                 "source": "id",
