@@ -158,6 +158,10 @@ class ProjectCreator:
             self._itemObject["projectType"] = "ObservationProject"
             projectObject["observationLayers"] = projectConfig["observationLayers"]
 
+        # populate bookmarks property
+        if "bookmarks" in projectConfig:
+            projectObject["bookmarks"] = projectConfig["bookmarks"]
+
         # create Project item
         item = self._createItem()
         self._logger.info("Created item. Item id: {0}".format(item.id))
