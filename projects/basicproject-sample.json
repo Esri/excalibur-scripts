@@ -4,8 +4,8 @@
   "description": "",
   "instructions": "Look for damage",
   "focusImageLayer": {
-    "serviceType": "arcgis",
-    "serviceUrl": "url to image service",
+    "serviceType": "image",
+    "serviceUrl": "https://imagery.idt.geocloud.com/image/rest/services/satellite/sanfran_wv2_pan_noquery/ImageServer",
     "rasterIds": [],
     "layerNames": []
   }
