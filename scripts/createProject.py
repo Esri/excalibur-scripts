@@ -41,7 +41,7 @@ LOG_CONFIG_FILE_NAME = path.join(APP_CONFIG_DIR, "logging.conf")
 PROJECT_FOLDER_NAME = "Excalibur Imagery Projects"
 
 # Project version to use if none is specified in the project JSON
-DEFAULT_PROJECT_VERSION = 2
+DEFAULT_PROJECT_VERSION = "4.0"
 
 # Default type of project
 DEFAULT_PROJECT_TYPE = "BaseProject"
@@ -70,7 +70,7 @@ class ProjectCreator:
         self._gis = gis
         self.username = gis.properties["user"]["username"]
         self.shareWithOrg = shareWithOrg
-        self.verifySSL = verifySSL;
+        self.verifySSL = verifySSL
 
     def makeProject(self, projectConfig):
         """
@@ -88,9 +88,8 @@ class ProjectCreator:
         title = projectConfig["title"]
 
         # project object holds all info needed to create the portal item
-        itemObject = {"title": title, "projectType": DEFAULT_PROJECT_TYPE}
-        projectObject = {"instructions": "",
-                         "rasterIds": [], "version": DEFAULT_PROJECT_VERSION}
+        itemObject = {"title": title}
+        projectObject = {"instructions": "", "version": DEFAULT_PROJECT_VERSION}
 
         if "status" in projectConfig:
             itemObject["status"] = projectConfig["status"]
@@ -136,16 +135,14 @@ class ProjectCreator:
         self._logger.info(
             "Created folder. Folder Id: {0}".format(self._folderId))
 
-        # set folderId property id project version is 2
-        if projectObject["version"] != 1:
-            projectObject["folderId"] = self._folderId
-
         # populate the common properties for observation and basic project
         if "instructions" in projectConfig:
             projectObject["instructions"] = projectConfig["instructions"]
 
-        if "focusImageLayer" in projectConfig:
-            projectObject["focusImageLayer"] = projectConfig["focusImageLayer"]
+        if "primaryLayers" in projectConfig:
+            projectObject["primaryLayers"] = projectConfig["primaryLayers"]
+        elif "focusImageLayer" in projectConfig:
+            projectObject["primaryLayers"] = [projectConfig["focusImageLayer"]]
         else:
             if "serviceUrl" in projectConfig:
                 projectObject["serviceUrl"] = projectConfig["serviceUrl"]
@@ -190,8 +187,8 @@ class ProjectCreator:
                 return {"new": False, "id": f["id"]}
 
         # if we made it here a new folder needs to be created
-        createFolderResponse = self._gis.content.create_folder(name)
-        return {"new": True, "id": createFolderResponse["id"]}
+        createFolderResponse = self._gis.content.folders.create(name)
+        return {"new": True, "id": createFolderResponse.properties["id"]}
 
 
     def _createItem(self):
@@ -205,13 +202,14 @@ class ProjectCreator:
         item = {"title": self._itemObject["title"]}
         item["snippet"] = self._itemObject["snippet"]
         item["type"] = "Excalibur Imagery Project"
-        item["typeKeywords"] = "{0}, {1}".format(
-            self._itemObject["status"], self._itemObject["projectType"])
+        item["typeKeywords"] = "{0}".format(
+            self._itemObject["status"])
         item["tags"] = "Image Project"
         item["text"] = json.dumps(self._projectObject)
 
-        addItemResponse = self._gis.content.add(item, folder=self._folderName)
-        return addItemResponse
+        projectFolder = self._gis.content.folders.get(self._folderName)
+        addItemResponse = projectFolder.add(item)
+        return addItemResponse.result()
 
 
     def _getProjectFromFolder(self, folderId, projectName):

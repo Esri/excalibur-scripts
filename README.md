@@ -77,7 +77,7 @@ Contains the two Python scripts that write the project to the portal and the scr
 
 ### Imagery Project
 
-The properties for an imagery project. The `focusImageLayer` and `observationLayers` property are objects and their schema is described below.
+The properties for an imagery project. The `primaryLayers` entries are objects and their schema is described below.
 
 | Name   | Description  | Type  | Required  | Default |
 | ------ | -----------  | ----- | -------   | ------  |
@@ -86,61 +86,30 @@ The properties for an imagery project. The `focusImageLayer` and `observationLay
 | description | A more detailed description of the project | string | No | No default |
 | instructions | Instructions for the person who is going to be working with the project | string | Yes | |
 | webmapId | The item id of a webmap in the portal | string | No | If the webmapId is not specified, the user's default basemap is used |
-| focusImageLayer | The descriptor for an imagery layer. See below for the schema | *Focus Image Layer* | Yes | |
-| observationLayers | Array of descriptors for Feature Layers used to collect observations. | *Observation Layer[]* See below for the schema | No | |
+| primaryLayers | Array of descriptors for an imagery layer. Currently only one layer is supported. See below for the schema | Array of *Focus Image Layer* | Yes | |
 
 ### Focus Image Layer
 
 Supported service types at versions of Excalibur
 * ArcGIS Image Service - as of `v1.0`
+* ArcGIS Map Image Service - as of `v3.0`
+* ArcGIS Oriented Image Service - as of `v3.1`
+* ArcGIS Tiled Imagery Service - as of `v3.0`
+* ArcGIS Tiled Map Service - as of `v3.0`
+* Video Service - as of `v3.1`
+* WCS Service - as of `v11.5` of Enterprise
 * WMS Service - as of `v2.1`
 * WMTS Service - as of `v2.1`
 
-The properties for the `focusImageLayer` object.
+The properties for the objects in the `primaryLayers` array.
 
 | Name   | Description  | Type  | Required  | Default |
 | ------ | -----------  | ----- | --------  | ------- |
-| serviceType | The type of service used for the layer. The options are `arcgis` for an ArcGIS Image Service, `wms` for an OGC WMS Service, `wmts` for an OGC WMTS Service | Yes | |
-| serviceUrl | Url to the service | string | Yes | |
-| rasterIds | These are the ids of images in an ArcGIS Image Service. If specified, the layer will be configured to show only the specified images. Only valid when serviceType is `arcgis` | number[] | No | [] |
+| serviceType | The type of service used for the layer. The options are `image` for an ArcGIS Image Service, `mapImage` for an ArcGIS Map Image Service, `oriented-imagery` for an ArcGIS Oriented Image Service, `tile` for an ArcGIS Tiled Map Service, `tiledimagery` for an ArcGiS Tiled Imagery Service, `video` for a Video Service, `wcs` for an OGC WCS Service, `wms` for an OGC WMS Service, `wmts` for an OGC WMTS Service | Yes | |
+| itemId | The id of the portal item corresponding to the layer. The item must be in the same portal that the Excalibur application is running in | string | No (either `itemId` or `serviceUrl` must be specified) | |
+| serviceUrl | Url to the service | string |  No (either `itemId` or `serviceUrl` must be specified) | |
+| rasterIds | These are the ids of images in an ArcGIS Image Service. If specified, the layer will be configured to show only the specified images. Only valid when serviceType is `image` | number[] | No | [] |
 | layerNames | An array of strings. These are the sublayer names in a WMS or WMTS Service. If specified, the layer will be configured to show only the specified sublayers. Only valid when serviceType is `wms` or `wmts`. *WMTS* layers only support displaying ONE sublayer. | string[] | No | [] |
-
-### Observation Layer
-
-* *Observation Layer* supported since `v1.0`
-* *enrichmentDefinition* supported since `v2.3`
-
-The properties for the objects in the `observationLayers` array.
-
-| Name   | Description  | Type  | Required  | Default |
-| ------ | -----------  | ----- | --------  | ------- |
-| itemId | The id of a Feature Layer item in the same portal where the project is stored. | string | Yes | |
-| layerId | The id of the layer in a multiple layer feature service | number | No | 0 |
-| url    | The url to an ArcGIS Feature Service layer. | string | No | |
-| enrichmentDefinition | An object describing how enrichment fields are populated. The geometry type of the Observation Layer must be *Point* | *Enrichment Definition* See below for schema | No |  |
-
-### Enrichment Definition
-
-| Name   | Description  | Type  | Required  | Default |
-| ------ | -----------  | ----- | --------  | ------- |
-| description | A short description of the enrichment definition | string | Yes | |
-| layers | The Enrichment Layers that are part of this definition | *Enrichment Layer Definition[]* See below for schema | Yes | |
-
-### Enrichment Layer Definition
-
-| Name   | Description  | Type  | Required  | Default |
-| ------ | -----------  | ----- | --------  | ------- |
-| fields | Information on source and destination fields | *Enrichment Field Definition[]* See below for schema | Yes | |
-| sourceItemId  | The itemId of a layer in the portal hosting the application. The geometry type of the service layer must be *Polygon* and the layer must be in the WebMap of the project. This or `sourceUrl` must be set. | string | No | |
-| sourceUrl  | The url to the service. The geometry type of the service layer must be *Polygon* and the layer must be in the WebMap of the project. This or `sourceItemId` must be set.  | string | No | |
-| layerId | The id of the layer in a multiple layer feature service | number | No | 0 |
-
-### Enrichment Field Definition
-
-| Name   | Description  | Type  | Required  | Default |
-| ------ | -----------  | ----- | --------  | ------- |
-| source | Name of the field in the enrichment source service. This is the name of the field, NOT THE ALIAS | string | Yes | |
-| destination | Name of the field in the observation layer. This is the name of the field, NOT THE ALIAS | string | Yes | |
 
 ## Sample Project Configurations
 
@@ -154,12 +123,14 @@ The properties for the objects in the `observationLayers` array.
   "summary": "A simple project with just a focus image layer",
   "description": "",
   "instructions": "Look for damage",
-  "focusImageLayer": {
-    "serviceType": "arcgis",
-    "serviceUrl": "https://server/service-name/ImageServer",
-    "rasterIds": [],
-    "layerNames": []
-  }
+  "primaryLayers": [
+    {
+      "serviceType": "image",
+      "serviceUrl": "https://server/service-name/ImageServer",
+      "rasterIds": [],
+      "layerNames": []
+    }
+  ]
 }
 ```
 
@@ -171,12 +142,33 @@ The properties for the objects in the `observationLayers` array.
   "summary": "A simple project with just a focus image layer",
   "description": "",
   "instructions": "Look for damage",
-  "focusImageLayer": {
-    "serviceType": "arcgis",
-    "serviceUrl": "https://server/service-name/ImageServer",
-    "rasterIds": [1, 2, 3],
-    "layerNames": []
-  }
+  "primaryLayers": [
+    {
+      "serviceType": "arcgis",
+      "serviceUrl": "https://server/service-name/ImageServer",
+      "rasterIds": [1, 2, 3],
+      "layerNames": []
+    }
+  ]
+}
+```
+
+#### ArcGIS Video Service and the service is referenced by the id of a portal item
+
+```
+{
+  "title": "A simple video project",
+  "summary": "A simple project with just a video layer",
+  "description": "",
+  "instructions": "Look for damage",
+  "primaryLayers": [
+    {
+      "serviceType": "video",
+      "itemId": "27e891821878434eb06123d2bc9bd76b",
+      "rasterIds": [],
+      "layerNames": []
+    }
+  ]
 }
 ```
 
@@ -188,12 +180,14 @@ The properties for the objects in the `observationLayers` array.
   "summary": "A simple project with a WMS layer",
   "description": "",
   "instructions": "Look for damage",
-  "focusImageLayer": {
-    "serviceType": "wms",
-    "serviceUrl": "https://server/service-name",
-    "rasterIds": [],
-    "layerNames": []
-  }
+  "primaryLayers": [
+    {
+      "serviceType": "wms",
+      "serviceUrl": "https://server/service-name",
+      "rasterIds": [],
+      "layerNames": []
+    }
+  ]
 }
 ```
 
@@ -205,12 +199,14 @@ The properties for the objects in the `observationLayers` array.
   "summary": "A simple project with a WMS layer",
   "description": "",
   "instructions": "Look for damage",
-  "focusImageLayer": {
-    "serviceType": "wms",
-    "serviceUrl": "https://server/service-name",
-    "rasterIds": []
-    "layerNames": ["damage0102", "damage0104"]
-  }
+  "primaryLayers": [
+    {
+      "serviceType": "wms",
+      "serviceUrl": "https://server/service-name",
+      "rasterIds": []
+      "layerNames": ["damage0102", "damage0104"]
+    }
+  ]
 }
 ```
 
@@ -223,104 +219,12 @@ NOTE: WMTS service layers are cached and **ONLY ONE** can be displayed as the fo
   "summary": "A simple project with a WMTS layer",
   "description": "",
   "instructions": "Look for weather",
-  "focusImageLayer": {
-    "serviceType": "wmts",
-    "serviceUrl": "https://server/service-name",
-    "rasterIds": []
-    "layerNames": ["radar-base-reflectivity"]
-  }
-}
-```
-
-### Project with observation layer(s)
-
-#### Single observation layer
-
-```
-{
-  "title": "Imagery project with observations",
-  "summary": "A project with an observation layer",
-  "description": "",
-  "instructions": "Add a point on top of anything of interest and enter comments",
-  "focusImageLayer": {
-    "serviceType": "arcgis",
-    "serviceUrl": "https://server/service-name/ImageServer",
-    "rasterIds": [1, 2, 3],
-    "layerNames": []
-  },
-  "observationLayers": [
+  "primaryLayers": [
     {
-      "itemId": "123456789abcdefg"
-    }
-  ]
-}
-```
-
-#### Multiple observation layers (one with layerId set)
-
-This also shows the `webmapId` property
-
-```
-{
-  "title": "Imagery project with observations",
-  "summary": "A project with an observation layer",
-  "description": "",
-  "instructions": "Add a point on top of anything of interest and enter comments",
-  "focusImageLayer": {
-    "serviceType": "arcgis",
-    "serviceUrl": "https://server/service-name/ImageServer",
-    "rasterIds": [1, 2, 3],
-    "layerNames": []
-  },
-  "observationLayers": [
-    {
-      "itemId": "123456789abcdefg"
-    },
-    {
-      "itemId": "hijklmnop9876543",
-      layerId: 2
-    }
-  ],
-  "webmapId": "12345678"
-}
-```
-
-#### Observation layer with enrichment definition
-
-```
-{
-  "title": "Imagery project with observations getting data from another layer",
-  "summary": "A project with an observation layer that gets its 'parcelid' field calculated from the parcel boundary polygon layer's 'id' field",
-  "description": "",
-  "instructions": "Add a point on top of anything of interest and enter comments",
-  "webmapId": "12345678",
-  "focusImageLayer": {
-    "serviceType": "arcgis",
-    "serviceUrl": "https://server/service-name/ImageServer",
-    "rasterIds": [
-      1,
-      2,
-      3
-    ],
-    "layerNames": []
-  },
-  "observationLayers": [
-    {
-      "itemId": "ead6deb3d93848c4a7fd58025cc2cdaa",
-      "enrichmentDefinition": {
-        "description": "Building Parcel Info",
-        "layers": [
-          {
-            "sourceUrl": "https://path/to/parcel/boundaries/FeatureServer",
-            "fields": [
-              {
-                "source": "id",
-                "destination": "parcelid"
-              }
-            ]
-          }
-        ]
-      }
+      "serviceType": "wmts",
+      "serviceUrl": "https://server/service-name",
+      "rasterIds": []
+      "layerNames": ["radar-base-reflectivity"]
     }
   ]
 }
