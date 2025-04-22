@@ -3,10 +3,12 @@
   "summary": "A simple project with just a focus image layer",
   "description": "",
   "instructions": "Look for damage",
-  "focusImageLayer": {
-    "serviceType": "image",
-    "serviceUrl": "https://imagery.idt.geocloud.com/image/rest/services/satellite/sanfran_wv2_pan_noquery/ImageServer",
-    "rasterIds": [],
-    "layerNames": []
-  }
+  "primaryLayers": [
+    {
+      "serviceType": "image",
+      "serviceUrl": "https://imagery.idt.geocloud.com/image/rest/services/satellite/sanfran_wv2_pan_noquery/ImageServer",
+      "rasterIds": [],
+      "layerNames": []
+    }
+  ]
 }
