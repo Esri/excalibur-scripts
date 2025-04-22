@@ -153,6 +153,25 @@ The properties for the objects in the `primaryLayers` array.
 }
 ```
 
+#### ArcGIS Video Service and the service is referenced by the id of a portal item
+
+```
+{
+  "title": "A simple video project",
+  "summary": "A simple project with just a video layer",
+  "description": "",
+  "instructions": "Look for damage",
+  "primaryLayers": [
+    {
+      "serviceType": "video",
+      "itemId": "27e891821878434eb06123d2bc9bd76b",
+      "rasterIds": [],
+      "layerNames": []
+    }
+  ]
+}
+```
+
 #### WMS Service all layers are displayed
 
 ```
