@@ -187,8 +187,8 @@ class ProjectCreator:
                 return {"new": False, "id": f["id"]}
 
         # if we made it here a new folder needs to be created
-        createFolderResponse = self._gis.content.create_folder(name)
-        return {"new": True, "id": createFolderResponse["id"]}
+        createFolderResponse = self._gis.content.folders.create(name)
+        return {"new": True, "id": createFolderResponse.properties["id"]}
 
 
     def _createItem(self):
@@ -207,8 +207,9 @@ class ProjectCreator:
         item["tags"] = "Image Project"
         item["text"] = json.dumps(self._projectObject)
 
-        addItemResponse = self._gis.content.add(item, folder=self._folderName)
-        return addItemResponse
+        projectFolder = self._gis.content.folders.get(self._folderName)
+        addItemResponse = projectFolder.add(item)
+        return addItemResponse.result()
 
 
     def _getProjectFromFolder(self, folderId, projectName):
