@@ -1,5 +1,7 @@
 {
   "PROJECT_CONFIG_DIR": "..\\projects",
   "SHARING_URL": "https://domain/webadaptor/sharing/rest",
+  "VIDEO_SERVER_URL": "https://domain/webadaptor",
+  "URL_TO_VIDEO_STREAM": "",
   "VERIFY_SSL": false
 }
