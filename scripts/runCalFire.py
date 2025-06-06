@@ -94,7 +94,7 @@ if __name__ == "__main__":
     theCreator = CalFireCreator(username=username, password=password, portalSharingUrl=portalUrl, videoServerUrl=videoServerUrl)
 
     # Make service
-    serviceItemId = theCreator.createService(serviceName=videoServiceName, urlToStream=videoStreamUrl)
+    serviceItemId = theCreator.createService(serviceName=videoServiceName, urlToStream=videoStreamUrl, startStream=True)
     print("Service created: {0}".format(serviceItemId))
 
     # Make project

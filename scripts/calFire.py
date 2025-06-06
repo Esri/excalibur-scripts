@@ -89,7 +89,7 @@ class CalFireCreator:
   #----------------------------
   # createService
   #----------------------------
-  def createService(self, serviceName, urlToStream):
+  def createService(self, serviceName, urlToStream, startStream=False):
     """
     Method that creates the video service. An exception is raised if a service with the same name exists
 
@@ -107,10 +107,17 @@ class CalFireCreator:
        raise Exception("Service name is not available")
 
     # Create the service on the portal
-    serviceItemId = self._createService(serviceName=serviceName, urlToStream=urlToStream)
+    createServiceResponse = self._createService(serviceName=serviceName, urlToStream=urlToStream)
+
+    serviceItemId = createServiceResponse["itemId"]
+    serviceUrl = createServiceResponse["url"]
 
     # Share the service item with the organization
-    self._shareItem(serviceItemId)
+    self._shareItem(itemId=serviceItemId)
+
+    # Start the stream
+    if (startStream):
+      self._startService(serviceUrl=serviceUrl)
 
     return serviceItemId
 
@@ -273,7 +280,7 @@ class CalFireCreator:
     Method creates the video service and adds a layer to it
 
     Returns:
-        string: item id of service
+        object: object with the service url and item id ofthe service portal item
     """
 
     # Create empty service
@@ -305,9 +312,9 @@ class CalFireCreator:
     layerParameter = json.dumps(layerParameter)
 
     data = {"layer": layerParameter, "f": "json", "token": self.token}
-    serviceUrl = createServiceresponse["serviceurl"] + "/addLayer"
+    addLayerUrl = createServiceresponse["serviceurl"] + "/addLayer"
 
-    r = requests.post(serviceUrl, data=data, verify=VERIFY_SSL)
+    r = requests.post(addLayerUrl, data=data, verify=VERIFY_SSL)
     if (r.status_code != 200):
       raise Exception("Error creating service on portal. Bad status code: {0}".format(r.status_code))
 
@@ -317,7 +324,29 @@ class CalFireCreator:
         addLayerResponse["error"])
       raise Exception(message)
 
-    return createServiceresponse["itemId"]
+    serviceItemId = createServiceresponse["itemId"]
+    serviceUrl = createServiceresponse["serviceurl"]
+    return {"itemId": serviceItemId, "url": createServiceresponse["serviceurl"]}
+
+
+  #-------------------------
+  # _startService
+  #-------------------------
+  def _startService(self, serviceUrl):
+    startUrl = serviceUrl + "/0/start"
+    data = {"stopOn": "request", "f": "json", "token": self.token}
+
+    r = requests.post(startUrl, data=data, verify=VERIFY_SSL)
+    if (r.status_code != 200):
+      raise Exception("Error starting service. Bad status code: {0}".format(r.status_code))
+
+    response = r.json()
+    if "error" in response:
+      message = "Error starting service: {!s}".format(
+        response["error"])
+      raise Exception(message)
+
+    return
 
 
   #----------------------------
