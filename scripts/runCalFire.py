@@ -97,5 +97,14 @@ if __name__ == "__main__":
     serviceItemId = theCreator.createService(serviceName=videoServiceName, urlToStream=videoStreamUrl)
     print("Service created: {0}".format(serviceItemId))
 
+    # Make project
+    projectJson = None
+    with open(filePath) as projectFile:
+       projectJson = projectFile.read()
+    projectJson = json.loads(projectJson)
+
+    projectItemId = theCreator.createProject(projectConfig=projectJson, videoLayerItemId=serviceItemId)
+    print("project made - itemId: {0} ".format(projectItemId))
+
   except Exception as e:
     print("Error creating project: {0}".format(e))
