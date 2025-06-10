@@ -94,8 +94,8 @@ if __name__ == "__main__":
     theCreator = CalFireCreator(username=username, password=password, portalSharingUrl=portalUrl, videoServerUrl=videoServerUrl)
 
     # Make service
-    serviceItemId = theCreator.createService(serviceName=videoServiceName, urlToStream=videoStreamUrl, startStream=True)
-    print("Service created: {0}".format(serviceItemId))
+    serviceInfo = theCreator.createService(serviceName=videoServiceName, urlToStream=videoStreamUrl, startStream=False)
+    print("Service created - url: {0}".format(serviceInfo["serviceUrl"]))
 
     # Make project
     projectJson = None
@@ -103,8 +103,9 @@ if __name__ == "__main__":
        projectJson = projectFile.read()
     projectJson = json.loads(projectJson)
 
-    projectItemId = theCreator.createProject(projectConfig=projectJson, videoLayerItemId=serviceItemId)
+    projectItemId = theCreator.createProject(projectConfig=projectJson, videoLayerItemId=serviceInfo["serviceItemId"], videoLayerUrl=serviceInfo["serviceUrl"])
     print("project made - itemId: {0} ".format(projectItemId))
+    print("service made - url: {0}".format(serviceInfo["serviceUrl"]))
 
   except Exception as e:
     print("Error creating project: {0}".format(e))

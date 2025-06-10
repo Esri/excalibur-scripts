@@ -39,13 +39,15 @@ class CalFireCreator:
   #----------------------------
   # createProject
   #----------------------------
-  def createProject(self, projectConfig, videoLayerItemId):
+  def createProject(self, projectConfig, videoLayerItemId, videoLayerUrl):
     """
     The function to create the portal item that represents the Excalibur Imagery Project.
     The project item gets shared with the organization
 
     Parameters:
         projectConfig (JSON object) The JSON describing the properties of the Excalibur Imagery Project.
+        videoLayerItemId (string) The item id of the video analysis layer
+        videoLayerUrl (string) The url to the video analysis layer
 
     Returns:
         string: The itemid of the Excalibur Imagery Project portal item.
@@ -67,7 +69,7 @@ class CalFireCreator:
       projectObject["instructions"] = projectConfig["instructions"]
 
     # add primary layer info to project object
-    primaryLayer = {"itemId": videoLayerItemId, "serviceType": "video"}
+    primaryLayer = {"itemId": videoLayerItemId, "url": videoLayerUrl, "serviceType": "video"}
     projectObject["primaryLayers"] = [primaryLayer]
 
     # create folder if needed
@@ -98,7 +100,7 @@ class CalFireCreator:
         urlToStream (string): The url to the video stream
 
     Returns:
-        string: The itemId of the created service.
+        object: The itemId of the created service and the url to the created service.
     """
 
     # Check if service is available
@@ -119,7 +121,7 @@ class CalFireCreator:
     if (startStream):
       self._startService(serviceUrl=serviceUrl)
 
-    return serviceItemId
+    return {"serviceItemId": serviceItemId, "serviceUrl": serviceUrl + "/0"}
 
   #----------------------------
   # _createFolder
