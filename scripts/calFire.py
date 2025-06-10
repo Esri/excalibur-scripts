@@ -9,7 +9,7 @@ VERIFY_SSL = False
 DEFAULT_PROJECT_VERSION = "4.0"
 
 class CalFireCreator:
-  def __init__(self, username, password, portalSharingUrl, videoServerUrl):
+  def __init__(self, username, password, portalSharingUrl, videoServerUrl=""):
     """
     Constructor for the CalFireCreator class
 
@@ -20,18 +20,20 @@ class CalFireCreator:
             Format is https://<domain>/<webadaptor>/sharing/rest
         videoServerUrl (string): The url to the video server endpoint. Format is https://<domain>/<webadaptor>
     """
-    if not username or not password or not portalSharingUrl or not videoServerUrl:
-        raise Exception("Missing argument(s). Supply username, password, portalSharingUrl, and videoServerUrl")
+    if not username or not password or not portalSharingUrl:
+        raise Exception("Missing argument(s). Supply username, password, portalSharingUrl")
 
     # Urls and other info to access and create items in portal
     # and to create a video service
     self.portalSharingUrl = portalSharingUrl.rstrip("/")
-    self.videoServerUrl = videoServerUrl.rstrip("/")
     self.username = username
     self.password = password
 
+    if videoServerUrl != "":
+      videoServerUrl = videoServerUrl.rstrip("/")
+      self.videoServerRestUrl = videoServerUrl + "/rest/services"
+
     self.contentUrl = self.portalSharingUrl + "/content/users/" + username
-    self.videoServerRestUrl = self.videoServerUrl + "/rest/services"
 
     # portal token
     self.token = self._getToken()
@@ -119,9 +121,29 @@ class CalFireCreator:
 
     # Start the stream
     if (startStream):
-      self._startService(serviceUrl=serviceUrl)
+      self.startService(serviceUrl=serviceUrl)
 
-    return {"serviceItemId": serviceItemId, "serviceUrl": serviceUrl + "/0"}
+    return {"serviceItemId": serviceItemId, "serviceUrl": serviceUrl}
+
+
+  #-------------------------
+  # startService
+  #-------------------------
+  def startService(self, serviceUrl):
+    startUrl = serviceUrl + "/0/start"
+    data = {"stopOn": "request", "f": "json", "token": self.token}
+
+    r = requests.post(startUrl, data=data, verify=VERIFY_SSL)
+    if (r.status_code != 200):
+      raise Exception("Error starting service. Bad status code: {0}".format(r.status_code))
+
+    response = r.json()
+    if "error" in response:
+      message = "Error starting service: {!s}".format(
+        response["error"])
+      raise Exception(message)
+
+    return
 
   #----------------------------
   # _createFolder
@@ -329,26 +351,6 @@ class CalFireCreator:
     serviceItemId = createServiceresponse["itemId"]
     serviceUrl = createServiceresponse["serviceurl"]
     return {"itemId": serviceItemId, "url": createServiceresponse["serviceurl"]}
-
-
-  #-------------------------
-  # _startService
-  #-------------------------
-  def _startService(self, serviceUrl):
-    startUrl = serviceUrl + "/0/start"
-    data = {"stopOn": "request", "f": "json", "token": self.token}
-
-    r = requests.post(startUrl, data=data, verify=VERIFY_SSL)
-    if (r.status_code != 200):
-      raise Exception("Error starting service. Bad status code: {0}".format(r.status_code))
-
-    response = r.json()
-    if "error" in response:
-      message = "Error starting service: {!s}".format(
-        response["error"])
-      raise Exception(message)
-
-    return
 
 
   #----------------------------

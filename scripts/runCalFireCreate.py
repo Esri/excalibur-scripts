@@ -95,7 +95,6 @@ if __name__ == "__main__":
 
     # Make service
     serviceInfo = theCreator.createService(serviceName=videoServiceName, urlToStream=videoStreamUrl, startStream=False)
-    print("Service created - url: {0}".format(serviceInfo["serviceUrl"]))
 
     # Make project
     projectJson = None
