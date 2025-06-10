@@ -71,7 +71,7 @@ class CalFireCreator:
       projectObject["instructions"] = projectConfig["instructions"]
 
     # add primary layer info to project object
-    primaryLayer = {"itemId": videoLayerItemId, "url": videoLayerUrl, "serviceType": "video"}
+    primaryLayer = {"itemId": videoLayerItemId, "serviceUrl": videoLayerUrl, "serviceType": "video"}
     projectObject["primaryLayers"] = [primaryLayer]
 
     # create folder if needed
