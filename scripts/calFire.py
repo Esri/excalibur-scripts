@@ -1,6 +1,8 @@
 import json
 import requests
 
+import ntpath
+
 # Flag to not verify SSL certificate when making https request.
 # Change to True to verify SSL certificates
 VERIFY_SSL = False
@@ -125,6 +127,26 @@ class CalFireCreator:
 
     return {"serviceItemId": serviceItemId, "serviceUrl": serviceUrl}
 
+  #---------------------------------
+  # publishGeoJsonAndUpdateWebmap
+  #---------------------------------
+  """
+    Method that publishes a geojson file to the portal and makes
+    a feature service. Then adds the service as a layer to the webmap
+    and shares the geojson service with the group
+
+    Parameters:
+        path (string): Path to geojson file
+        webmapId (string): Item ID of webmap to add service to
+        groupIdToShareWith (string); Id of group to share service with
+    """
+  def publishGeoJsonAndUpdateWebmap(self, path, webmapId=None, groupIdToShareWith=None):
+    if not path:
+      raise Exception("path to file and webmapId are required")
+
+    # upload and publish geo json
+    serviceInfo = self._publishGeoJson(path=path)
+    return serviceInfo["serviceItemId"]
 
   #-------------------------
   # startService
@@ -232,7 +254,7 @@ class CalFireCreator:
     return response["id"]
 
   #-----------------------------
-  # getProjectFromFolder
+  # _getProjectFromFolder
   #-----------------------------
   def _getProjectFromFolder(self, folderId, projectName):
     """
@@ -352,6 +374,69 @@ class CalFireCreator:
     serviceUrl = createServiceresponse["serviceurl"]
     return {"itemId": serviceItemId, "url": createServiceresponse["serviceurl"]}
 
+
+  #---------------------------
+  # _publishGeoJson
+  #---------------------------
+  """
+    Method that publishes a geojson file as a feature service
+
+    Parameters:
+        path (string): Path to geojson file
+    """
+  def _publishGeoJson(self, path):
+    if not path:
+      raise Exception("path to file is required")
+
+    # upload file
+    filename = ntpath.basename(path)
+    serviceName = filename.replace(".geojson", "")
+
+    token = self.token
+
+    # Use multipart-encoded file params to make upload request
+    # The geojson file gets uploaded first and then published as a service.
+    files = {"file": (filename, open(path, "rb"))}
+    files["title"] = (None, serviceName)
+    files["type"] = (None, "GeoJson")
+    files["f"] = (None, "json")
+    files["token"] = (None, token)
+
+    url = self.contentUrl + "/addItem"
+
+    r = requests.post(url, files=files)
+    if (r.status_code != 200):
+      raise Exception("Error publishing geo json - status code: {0}".format(r.status_code))
+
+    response = r.json()
+    if "error" in response:
+      message = "Error publishing geo json: {0}".format(json.dumps(response["error"]))
+      raise Exception(message)
+    elif not response["success"]:
+      raise Exception("Publishing GeoJson was not successful")
+
+    # publish to make feature service
+    publishParameters = {}
+    publishParameters["name"] = serviceName
+
+    publishItemParams = {"itemId": response["id"]}
+    publishItemParams["publishParameters"] = json.dumps(publishParameters)
+    publishItemParams["filetype"] = "geojson"
+    publishItemParams["f"] = "json"
+    publishItemParams["token"] = token
+
+    url = self.contentUrl + "/publish"
+    r = requests.post(url, data=publishItemParams)
+    if (r.status_code != 200):
+      raise Exception("Error publishing geo json - status code: {0}".format(r.status_code))
+
+    response = r.json()
+    if "error" in response:
+      message = "Error publishing geo json: {0}".format(json.dumps(response["error"]))
+      raise Exception(message)
+
+    print("service Json: {0}".format(response["services"][0]))
+    return response["services"][0]
 
   #----------------------------
   # _shareItem
