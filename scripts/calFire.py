@@ -140,12 +140,24 @@ class CalFireCreator:
         webmapId (string): Item ID of webmap to add service to
         groupIdToShareWith (string); Id of group to share service with
     """
-  def publishGeoJsonAndUpdateWebmap(self, path, webmapId=None, groupIdToShareWith=None):
-    if not path:
+  def publishGeoJsonAndUpdateWebmap(self, path, webmapId, groupIdToShareWith=None):
+    if not path or not webmapId:
       raise Exception("path to file and webmapId are required")
 
     # upload and publish geo json
+    print("Publishing geojson")
     serviceInfo = self._publishGeoJson(path=path)
+    print("Published geojson")
+
+    # add service to webmap
+    if webmapId:
+      print("adding layer to web map")
+      filename = ntpath.basename(path)
+      layerName = filename.replace(".geojson", "")
+
+      self._addServiceToWebMap(serviceInfo=serviceInfo, webmapId=webmapId, layerName=layerName)
+      print("added layer to web map")
+
     return serviceInfo["serviceItemId"]
 
   #-------------------------
@@ -168,9 +180,61 @@ class CalFireCreator:
     return
 
   #----------------------------
+  # _addServiceToWebMap
+  #----------------------------
+  def _addServiceToWebMap(self, webmapId, serviceInfo, layerName):
+    if not webmapId or not serviceInfo or not layerName:
+      raise Exception("webmapId, serviceInfo and layerName are required")
+
+    # get current web map data
+    token = self.token
+    requestData = {"f": "json"}
+    requestData["token"] = token
+
+    itemDataUrl = self.portalSharingUrl + "/content/items/" + webmapId + "/data"
+    r = requests.get(itemDataUrl, params=requestData)
+
+    if (r.status_code != 200):
+      raise Exception("Error publishing geo json - status code: {0}".format(r.status_code))
+
+    response = r.json()
+    if "error" in response:
+      message = "Error publishing geo json: {0}".format(json.dumps(response["error"]))
+      raise Exception(message)
+
+    # add service to web map operational layers
+    layerJson = {"id": layerName + "cal-fire"}
+    layerJson["title"] = layerName
+    layerJson["url"] = serviceInfo["serviceurl"]
+    layerJson["itemId"] = serviceInfo["serviceItemId"]
+    layerJson["layerType"] = "ArcGISFeatureLayer"
+
+    response["operationalLayers"].append(layerJson)
+
+    # add layer to web map by updating web map item data
+    updateUrl = self.contentUrl + "/items/" + webmapId + "/update"
+    requestData = {"f": "json"}
+    requestData["token"] = token
+    requestData["text"] = json.dumps(response)
+
+    r = requests.post(updateUrl, data=requestData)
+
+    if (r.status_code != 200):
+      raise Exception("Error adding layer to map - status code: {0}".format(r.status_code))
+
+    response = r.json()
+    if "error" in response:
+      message = "Error publishing geo json: {0}".format(json.dumps(response["error"]))
+      raise Exception(message)
+    elif not response["success"]:
+      raise Exception("Adding layer was not successful")
+
+    return True
+
+
+  #----------------------------
   # _createFolder
   #----------------------------
-
   def _createFolder(self, name):
     """
     Private method that creates a folder in the user's content where the Imagery Project item is stored.
@@ -435,7 +499,6 @@ class CalFireCreator:
       message = "Error publishing geo json: {0}".format(json.dumps(response["error"]))
       raise Exception(message)
 
-    print("service Json: {0}".format(response["services"][0]))
     return response["services"][0]
 
   #----------------------------
