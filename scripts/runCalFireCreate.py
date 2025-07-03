@@ -20,6 +20,8 @@ parser.add_argument("-s", "--sharingurl",
 parser.add_argument("-v", "--videoserverurl",
                     help="url to the video server. If not specified, the url in the paths.json is used")
 parser.add_argument("-r", "--rtsp", help="url to the video stream. If not specified, the url in the paths.json is used")
+parser.add_argument("-g", "--groupid", help="Id of group to share the project and service with")
+parser.add_argument("-o", "--org", help="Boolean flag to share the project and service with the organization")
 parser.add_argument("-u", "--user", help="portal user name")
 parser.add_argument("-p", "--password", help="password for portal user")
 
@@ -62,6 +64,11 @@ if __name__ == "__main__":
     portalUrl = args.sharingurl
     videoServerUrl = args.videoserverurl
     videoStreamUrl = args.rtsp
+    groupId = args.groupid
+    shareWithOrg = args.org
+
+    if (shareWithOrg == "True" or shareWithOrg == True):
+       shareWithOrg = True
 
     # Check if all urls are set
     portalUrl = portalUrl or sharingUrlFromPaths
@@ -94,7 +101,7 @@ if __name__ == "__main__":
     theCreator = CalFireCreator(username=username, password=password, portalSharingUrl=portalUrl, videoServerUrl=videoServerUrl)
 
     # Make service
-    serviceInfo = theCreator.createService(serviceName=videoServiceName, urlToStream=videoStreamUrl, startStream=False)
+    serviceInfo = theCreator.createVideoService(serviceName=videoServiceName, urlToStream=videoStreamUrl, groupIdToShareWith=groupId,shareWithOrg=shareWithOrg, startStream=False)
 
     # Make project
     projectJson = None
@@ -102,7 +109,7 @@ if __name__ == "__main__":
        projectJson = projectFile.read()
     projectJson = json.loads(projectJson)
 
-    projectItemId = theCreator.createProject(projectConfig=projectJson, videoLayerItemId=serviceInfo["serviceItemId"], videoLayerUrl=serviceInfo["serviceUrl"])
+    projectItemId = theCreator.createProject(projectConfig=projectJson, videoLayerItemId=serviceInfo["serviceItemId"], videoLayerUrl=serviceInfo["serviceUrl"], groupIdToShareWith=groupId, shareWithOrg=shareWithOrg)
     print("project made - itemId: {0} ".format(projectItemId))
     print("service made - url: {0}".format(serviceInfo["serviceUrl"]))
 

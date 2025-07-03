@@ -17,6 +17,8 @@ parser = argparse.ArgumentParser(
     description="Publish a GeoJson service")
 parser.add_argument("fileName", help="name of GeoJson file")
 parser.add_argument("webmapId", help="item id of web map")
+parser.add_argument("-g", "--groupid", help="item id of group to share service and web map with")
+parser.add_argument("-o", "--org", help="boolean flag to share service and web map with organization")
 parser.add_argument("-s", "--sharingurl", help="portal sharing url. If not specified, the url in the paths.json is used")
 parser.add_argument("-u", "--user", help="portal user name")
 parser.add_argument("-p", "--password", help="password for portal user")
@@ -35,6 +37,9 @@ if __name__ == "__main__":
 
     if (fileName.endswith(".geojson") != True):
         fileName = fileName + ".geojson"
+
+    groupId = args.groupid
+    shareWithOrg = args.org
 
     sharingUrlFromPaths = None
     dataDirFromPaths = None
@@ -76,7 +81,7 @@ if __name__ == "__main__":
 
     # Publish GeoJson and add layer to web map
     print("Publishing GeoJson and updating web map")
-    itemId = theCreator.publishGeoJsonAndUpdateWebmap(path=geoJsonPath, webmapId=webmapId)
+    itemId = theCreator.publishGeoJsonAndUpdateWebmap(path=geoJsonPath, webmapId=webmapId, groupIdToShareWith=groupId, shareWithOrg=shareWithOrg)
     print("Published GeoJson and updated web map - service itemId: {0}".format(itemId))
 
   except Exception as e:

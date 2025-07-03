@@ -43,7 +43,7 @@ class CalFireCreator:
   #----------------------------
   # createProject
   #----------------------------
-  def createProject(self, projectConfig, videoLayerItemId, videoLayerUrl):
+  def createProject(self, projectConfig, videoLayerItemId, videoLayerUrl, groupIdToShareWith, shareWithOrg=False):
     """
     The function to create the portal item that represents the Excalibur Imagery Project.
     The project item gets shared with the organization
@@ -88,20 +88,22 @@ class CalFireCreator:
 
     # create the project portal item and share it
     projectItemId = self._createProjectItem(itemObject=itemObject, projectObject=projectObject)
-    self._shareItem(projectItemId)
+    self._shareItem(projectItemId, groupId=groupIdToShareWith, shareWithOrg=shareWithOrg)
 
     return projectItemId
 
   #----------------------------
-  # createService
+  # createVideoService
   #----------------------------
-  def createService(self, serviceName, urlToStream, startStream=False):
+  def createVideoService(self, serviceName, urlToStream, groupIdToShareWith, shareWithOrg=False, startStream=False):
     """
     Method that creates the video service. An exception is raised if a service with the same name exists
 
     Parameters:
         serviceName (string): The name of the service to create
         urlToStream (string): The url to the video stream
+        groupIdToShareWith (string): The id of the group to share the service with
+        shareWithOrg (boolean): Flag to share the service with the organization
 
     Returns:
         object: The itemId of the created service and the url to the created service.
@@ -112,14 +114,17 @@ class CalFireCreator:
     if (serviceExists):
        raise Exception("Service name is not available")
 
+    if shareWithOrg == "True" or shareWithOrg == True:
+      shareWithOrg = True
+
     # Create the service on the portal
-    createServiceResponse = self._createService(serviceName=serviceName, urlToStream=urlToStream)
+    createServiceResponse = self._createVideoService(serviceName=serviceName, urlToStream=urlToStream)
 
     serviceItemId = createServiceResponse["itemId"]
     serviceUrl = createServiceResponse["url"]
 
     # Share the service item with the organization
-    self._shareItem(itemId=serviceItemId)
+    self._shareItem(itemId=serviceItemId, groupId=groupIdToShareWith, shareWithOrg=shareWithOrg)
 
     # Start the stream
     if (startStream):
@@ -130,7 +135,8 @@ class CalFireCreator:
   #---------------------------------
   # publishGeoJsonAndUpdateWebmap
   #---------------------------------
-  """
+  def publishGeoJsonAndUpdateWebmap(self, path, webmapId, groupIdToShareWith=None, shareWithOrg=False):
+    """
     Method that publishes a geojson file to the portal and makes
     a feature service. Then adds the service as a layer to the webmap
     and shares the geojson service with the group
@@ -138,16 +144,22 @@ class CalFireCreator:
     Parameters:
         path (string): Path to geojson file
         webmapId (string): Item ID of webmap to add service to
-        groupIdToShareWith (string); Id of group to share service with
+        groupIdToShareWith (string): Id of group to share service with
+        shareWithOrg (boolean): Flag to share service with organization
     """
-  def publishGeoJsonAndUpdateWebmap(self, path, webmapId, groupIdToShareWith=None):
     if not path or not webmapId:
       raise Exception("path to file and webmapId are required")
+
+    if shareWithOrg == "True" or shareWithOrg == True:
+      shareWithOrg = True
 
     # upload and publish geo json
     print("Publishing geojson")
     serviceInfo = self._publishGeoJson(path=path)
     print("Published geojson")
+
+    # share service with group
+    self._shareItem(serviceInfo["serviceItemId"], groupId=groupIdToShareWith, shareWithOrg=shareWithOrg)
 
     # add service to webmap
     if webmapId:
@@ -159,6 +171,7 @@ class CalFireCreator:
       print("added layer to web map")
 
     return serviceInfo["serviceItemId"]
+
 
   #-------------------------
   # startService
@@ -192,7 +205,7 @@ class CalFireCreator:
     requestData["token"] = token
 
     itemDataUrl = self.portalSharingUrl + "/content/items/" + webmapId + "/data"
-    r = requests.get(itemDataUrl, params=requestData)
+    r = requests.get(itemDataUrl, params=requestData, verify=VERIFY_SSL)
 
     if (r.status_code != 200):
       raise Exception("Error publishing geo json - status code: {0}".format(r.status_code))
@@ -217,7 +230,7 @@ class CalFireCreator:
     requestData["token"] = token
     requestData["text"] = json.dumps(response)
 
-    r = requests.post(updateUrl, data=requestData)
+    r = requests.post(updateUrl, data=requestData, verify=VERIFY_SSL)
 
     if (r.status_code != 200):
       raise Exception("Error adding layer to map - status code: {0}".format(r.status_code))
@@ -383,9 +396,9 @@ class CalFireCreator:
 
 
   #----------------------------
-  # _createService
+  # _createVideoService
   #----------------------------
-  def _createService(self, serviceName, urlToStream):
+  def _createVideoService(self, serviceName, urlToStream):
     """
     Method creates the video service and adds a layer to it
 
@@ -442,13 +455,13 @@ class CalFireCreator:
   #---------------------------
   # _publishGeoJson
   #---------------------------
-  """
-    Method that publishes a geojson file as a feature service
-
-    Parameters:
-        path (string): Path to geojson file
-    """
   def _publishGeoJson(self, path):
+    """
+      Method that publishes a geojson file as a feature service
+
+      Parameters:
+          path (string): Path to geojson file
+    """
     if not path:
       raise Exception("path to file is required")
 
@@ -468,7 +481,7 @@ class CalFireCreator:
 
     url = self.contentUrl + "/addItem"
 
-    r = requests.post(url, files=files)
+    r = requests.post(url, files=files, verify=VERIFY_SSL)
     if (r.status_code != 200):
       raise Exception("Error publishing geo json - status code: {0}".format(r.status_code))
 
@@ -490,7 +503,7 @@ class CalFireCreator:
     publishItemParams["token"] = token
 
     url = self.contentUrl + "/publish"
-    r = requests.post(url, data=publishItemParams)
+    r = requests.post(url, data=publishItemParams, verify=VERIFY_SSL)
     if (r.status_code != 200):
       raise Exception("Error publishing geo json - status code: {0}".format(r.status_code))
 
@@ -504,17 +517,20 @@ class CalFireCreator:
   #----------------------------
   # _shareItem
   #----------------------------
-  def _shareItem(self, itemId):
+  def _shareItem(self, itemId, groupId, shareWithOrg=False):
     """
-    Method that shares the an item with the portal organization
+    Method that shares the an item with the group and optionally with portal organization
 
     Parameters:
         itemId (string): The id of the item
+        groupId (string): The id of the group to share item with
+        shareWithOrg: Boolean flag to share item with portal organization
     """
 
     url = self.contentUrl + "/shareItems"
     data = {"f": "json", "token": self.token}
-    data["org"] = True
+    data["org"] = shareWithOrg
+    data["groups"] = groupId
     data["items"] = itemId
 
     r = requests.post(url, data=data, verify=VERIFY_SSL)
