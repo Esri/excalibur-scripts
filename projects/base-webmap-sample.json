@@ -1,0 +1,36 @@
+{
+  "operationalLayers": [],
+  "baseMap": {
+    "baseMapLayers": [
+      {
+        "id": "197cbfa9e4a-layer-60",
+        "title": "World Topo Map",
+        "url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer",
+        "layerType": "ArcGISTiledMapServiceLayer"
+      }
+    ],
+    "title": "Topographic"
+  },
+  "authoringApp": "ArcGISMapViewer",
+  "authoringAppVersion": "2025.1",
+  "initialState": {
+    "viewpoint": {
+      "targetGeometry": {
+        "spatialReference": {
+          "latestWkid": 3857,
+          "wkid": 102100
+        },
+        "xmin": -13412732.983941984,
+        "ymin": 4298499.908194787,
+        "xmax": -13391120.414194379,
+        "ymax": 4312698.086198739
+      }
+    }
+  },
+  "spatialReference": {
+    "latestWkid": 3857,
+    "wkid": 102100
+  },
+  "timeZone": "system",
+  "version": "2.33"
+}

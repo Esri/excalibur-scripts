@@ -15,10 +15,8 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     "configFileName", help="name of file containing imagery project configuration")
 parser.add_argument("serviceName", help="name of video service to create")
-parser.add_argument("-s", "--sharingurl",
-                    help="portal sharing url. If not specified, the url in the paths.json is used")
-parser.add_argument("-v", "--videoserverurl",
-                    help="url to the video server. If not specified, the url in the paths.json is used")
+parser.add_argument("-s", "--sharingurl", help="portal sharing url. If not specified, the url in the paths.json is used")
+parser.add_argument("-v", "--videoserverurl", help="url to the video server. If not specified, the url in the paths.json is used")
 parser.add_argument("-r", "--rtsp", help="url to the video stream. If not specified, the url in the paths.json is used")
 parser.add_argument("-g", "--groupid", help="Id of group to share the project and service with")
 parser.add_argument("-o", "--org", help="Boolean flag to share the project and service with the organization")

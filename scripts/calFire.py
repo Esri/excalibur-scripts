@@ -1,3 +1,5 @@
+from os import path
+
 import json
 import requests
 
@@ -6,6 +8,9 @@ import ntpath
 # Flag to not verify SSL certificate when making https request.
 # Change to True to verify SSL certificates
 VERIFY_SSL = False
+
+# Path to directory that holds files with configuration info
+APP_CONFIG_DIR = r"..\config"
 
 # Project version to use if none is specified in the project JSON
 DEFAULT_PROJECT_VERSION = "4.0"
@@ -43,7 +48,7 @@ class CalFireCreator:
   #----------------------------
   # createProject
   #----------------------------
-  def createProject(self, projectConfig, videoLayerItemId, videoLayerUrl, groupIdToShareWith, shareWithOrg=False):
+  def createProject(self, projectConfig, videoLayerItemId, videoLayerUrl, webmapId, groupIdToShareWith, shareWithOrg=False):
     """
     The function to create the portal item that represents the Excalibur Imagery Project.
     The project item gets shared with the organization
@@ -52,6 +57,9 @@ class CalFireCreator:
         projectConfig (JSON object) The JSON describing the properties of the Excalibur Imagery Project.
         videoLayerItemId (string) The item id of the video analysis layer
         videoLayerUrl (string) The url to the video analysis layer
+        webmapId (string) Item ID of web map to use for project
+        groupIdToShareWith (string) Id of group to share project with
+        shareWithOrg (boolean) Flag to share project with portal organization
 
     Returns:
         string: The itemid of the Excalibur Imagery Project portal item.
@@ -66,15 +74,15 @@ class CalFireCreator:
     if "summary" in projectConfig:
       itemObject["snippet"] = projectConfig["summary"]
 
-    if "webmapId" in projectConfig:
-      projectObject["webmapId"] = projectConfig["webmapId"]
-
     if "instructions" in projectConfig:
       projectObject["instructions"] = projectConfig["instructions"]
 
     # add primary layer info to project object
     primaryLayer = {"itemId": videoLayerItemId, "serviceUrl": videoLayerUrl, "serviceType": "video"}
     projectObject["primaryLayers"] = [primaryLayer]
+
+    # add webmapId to project object
+    projectObject["webmapId"] = webmapId
 
     # create folder if needed
     folderResponse = self._createFolder(title)
@@ -135,42 +143,44 @@ class CalFireCreator:
   #---------------------------------
   # publishGeoJsonAndUpdateWebmap
   #---------------------------------
-  def publishGeoJsonAndUpdateWebmap(self, path, webmapId, groupIdToShareWith=None, shareWithOrg=False):
+  def publishGeoJsonAndUpdateWebmap(self, path, groupIdToShareWith=None, shareWithOrg=False):
     """
-    Method that publishes a geojson file to the portal and makes
+    Method that makes a web map, publishes a geojson file to the portal and makes
     a feature service. Then adds the service as a layer to the webmap
     and shares the geojson service with the group
 
     Parameters:
         path (string): Path to geojson file
-        webmapId (string): Item ID of webmap to add service to
         groupIdToShareWith (string): Id of group to share service with
         shareWithOrg (boolean): Flag to share service with organization
+
+    Returns:
+        string: The itemid of the Web Map portal item created.
     """
-    if not path or not webmapId:
-      raise Exception("path to file and webmapId are required")
+    if not path:
+      raise Exception("path to file is required")
 
     if shareWithOrg == "True" or shareWithOrg == True:
       shareWithOrg = True
 
+    filename = ntpath.basename(path)
+    layerName = filename.replace(".geojson", "")
+
+    # make web map and share it
+    newWebmapId = self._createWebMap(layerName)
+    self._shareItem(newWebmapId, groupId=groupIdToShareWith, shareWithOrg=shareWithOrg)
+
     # upload and publish geo json
-    print("Publishing geojson")
     serviceInfo = self._publishGeoJson(path=path)
-    print("Published geojson")
 
     # share service with group
     self._shareItem(serviceInfo["serviceItemId"], groupId=groupIdToShareWith, shareWithOrg=shareWithOrg)
 
     # add service to webmap
-    if webmapId:
-      print("adding layer to web map")
-      filename = ntpath.basename(path)
-      layerName = filename.replace(".geojson", "")
+    if newWebmapId:
+      self._addServiceToWebMap(serviceInfo=serviceInfo, webmapId=newWebmapId, layerName=layerName)
 
-      self._addServiceToWebMap(serviceInfo=serviceInfo, webmapId=webmapId, layerName=layerName)
-      print("added layer to web map")
-
-    return serviceInfo["serviceItemId"]
+    return newWebmapId
 
 
   #-------------------------
@@ -452,6 +462,46 @@ class CalFireCreator:
     return {"itemId": serviceItemId, "url": createServiceresponse["serviceurl"]}
 
 
+  #----------------------------
+  # _createWebMap
+  #----------------------------
+  def _createWebMap(self, title):
+    if not title:
+      raise Exception("_createWebMap::title is required")
+
+    projectConfigDir = ""
+
+    filePath = path.join(APP_CONFIG_DIR, "paths.json")
+    with open(filePath) as pathsFile:
+        pathsJson = pathsFile.read()
+        pathsJson = json.loads(pathsJson)
+        projectConfigDir = pathsJson["PROJECT_CONFIG_DIR"]
+
+    webmapJson = None
+    webmapFilePath = path.join(projectConfigDir, "base-webmap-sample.json")
+    with open(webmapFilePath) as webmapFile:
+      webmapJson = webmapFile.read()
+
+    url = self.contentUrl + "/addItem"
+
+    itemJson = {"title": title, "type": "Web Map"}
+    itemJson["text"] = webmapJson
+    itemJson["f"] = "json"
+    itemJson["token"] = self.token
+
+    r = requests.post(url, data=itemJson, verify=VERIFY_SSL)
+    if (r.status_code != 200):
+      raise Exception("Error creating webmap on portal. Bad status code: {0}".format(r.status_code))
+
+    createMapResponse = r.json()
+    if "error" in createMapResponse:
+      message = "Error creating webmap on portal: {!s}".format(
+        createMapResponse["error"])
+      raise Exception(message)
+
+    return createMapResponse["id"]
+
+
   #---------------------------
   # _publishGeoJson
   #---------------------------
@@ -530,8 +580,10 @@ class CalFireCreator:
     url = self.contentUrl + "/shareItems"
     data = {"f": "json", "token": self.token}
     data["org"] = shareWithOrg
-    data["groups"] = groupId
     data["items"] = itemId
+
+    if groupId:
+      data["groups"] = groupId
 
     r = requests.post(url, data=data, verify=VERIFY_SSL)
 
