@@ -113,9 +113,19 @@ if __name__ == "__main__":
     # Make new CalFireCreator
     theCreator = CalFireCreator(username=username, password=password, portalSharingUrl=sharingUrlFromPaths, videoServerUrl=videoServerUrlFromPaths)
 
+    # Load project json
+    projectJson = None
+    with open(projectFilePath) as projectFile:
+       projectJson = projectFile.read()
+    projectJson = json.loads(projectJson)
+
     # Publish GeoJson and add layer to web map
     print("*** Publishing GeoJson and updating web map ***")
-    webmapItemId = theCreator.publishGeoJsonAndUpdateWebmap(path=geoJsonPath, groupIdToShareWith=groupId, shareWithOrg=shareWithOrg)
+    webmapId = None
+    if "webmapId" in projectJson:
+      webmapId = projectJson["webmapId"]
+
+    webmapItemId = theCreator.publishGeoJsonAndUpdateWebmap(path=geoJsonPath, webmapId=webmapId, groupIdToShareWith=groupId, shareWithOrg=shareWithOrg)
     print("*** Published GeoJson and updated web map - web map itemId: {0} ***".format(webmapItemId))
 
     # Make video service
@@ -125,10 +135,6 @@ if __name__ == "__main__":
 
     # Make project
     print("*** Creating project ***")
-    projectJson = None
-    with open(projectFilePath) as projectFile:
-       projectJson = projectFile.read()
-    projectJson = json.loads(projectJson)
 
     projectItemId = theCreator.createProject(projectConfig=projectJson, videoLayerItemId=serviceInfo["serviceItemId"], videoLayerUrl=serviceInfo["serviceUrl"], webmapId=webmapItemId, groupIdToShareWith=groupId, shareWithOrg=shareWithOrg)
     print("project made - itemId: {0} ".format(projectItemId))

@@ -15,6 +15,36 @@ APP_CONFIG_DIR = r"..\config"
 # Project version to use if none is specified in the project JSON
 DEFAULT_PROJECT_VERSION = "4.0"
 
+# Renderer for geo json polygon
+GEOJSON_RENDERER = {
+  "drawingInfo": {
+    "renderer": {
+      "type": "simple",
+      "symbol": {
+        "type": "esriSFS",
+        "color": [
+          235,
+          21,
+          21,
+          38
+        ],
+        "outline": {
+          "type": "esriSLS",
+          "color": [
+            235,
+            21,
+            21,
+            255
+          ],
+          "width": 1.448,
+          "style": "esriSLSDash"
+        },
+        "style": "esriSFSSolid"
+      }
+    }
+  }
+}
+
 class CalFireCreator:
   def __init__(self, username, password, portalSharingUrl, videoServerUrl=""):
     """
@@ -143,14 +173,15 @@ class CalFireCreator:
   #---------------------------------
   # publishGeoJsonAndUpdateWebmap
   #---------------------------------
-  def publishGeoJsonAndUpdateWebmap(self, path, groupIdToShareWith=None, shareWithOrg=False):
+  def publishGeoJsonAndUpdateWebmap(self, path, webmapId=None, groupIdToShareWith=None, shareWithOrg=False):
     """
-    Method that makes a web map, publishes a geojson file to the portal and makes
+    Method that makes a web map if needed, publishes a geojson file to the portal and makes
     a feature service. Then adds the service as a layer to the webmap
     and shares the geojson service with the group
 
     Parameters:
         path (string): Path to geojson file
+        webmapId (string) Item id of web map item. A new web map gets created if this property is not supplied
         groupIdToShareWith (string): Id of group to share service with
         shareWithOrg (boolean): Flag to share service with organization
 
@@ -166,9 +197,10 @@ class CalFireCreator:
     filename = ntpath.basename(path)
     layerName = filename.replace(".geojson", "")
 
-    # make web map and share it
-    newWebmapId = self._createWebMap(layerName)
-    self._shareItem(newWebmapId, groupId=groupIdToShareWith, shareWithOrg=shareWithOrg)
+    # if 'webmapId' property not set make web map and share it
+    if not webmapId or webmapId == "":
+      webmapId = self._createWebMap(layerName)
+    self._shareItem(webmapId, groupId=groupIdToShareWith, shareWithOrg=shareWithOrg)
 
     # upload and publish geo json
     serviceInfo = self._publishGeoJson(path=path)
@@ -177,10 +209,10 @@ class CalFireCreator:
     self._shareItem(serviceInfo["serviceItemId"], groupId=groupIdToShareWith, shareWithOrg=shareWithOrg)
 
     # add service to webmap
-    if newWebmapId:
-      self._addServiceToWebMap(serviceInfo=serviceInfo, webmapId=newWebmapId, layerName=layerName)
+    if webmapId:
+      self._addServiceToWebMap(serviceInfo=serviceInfo, webmapId=webmapId, layerName=layerName)
 
-    return newWebmapId
+    return webmapId
 
 
   #-------------------------
@@ -231,8 +263,9 @@ class CalFireCreator:
     layerJson["url"] = serviceInfo["serviceurl"]
     layerJson["itemId"] = serviceInfo["serviceItemId"]
     layerJson["layerType"] = "ArcGISFeatureLayer"
+    layerJson["layerDefinition"] = GEOJSON_RENDERER
 
-    response["operationalLayers"].append(layerJson)
+    response["operationalLayers"].insert(0, layerJson)
 
     # add layer to web map by updating web map item data
     updateUrl = self.contentUrl + "/items/" + webmapId + "/update"
